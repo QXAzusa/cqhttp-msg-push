@@ -15,7 +15,7 @@ try:
     TG = config["TG"]
     KEY = config["KEY"]
     TG_ID = config["TG_UID"]
-    TG_API = config["TG_PROXY"]
+    TG_API = config["TG_API"]
 except:
     print("读取配置文件异常,请检查配置文件是否存在或语法是否有问题")
     assert()
@@ -58,7 +58,7 @@ async def recvMsg():
     json_data = json.loads(data.decode("utf-8"))
     if json_data["post_type"] == "meta_event":
         if json_data["meta_event_type"] == "heartbeat":
-             print("接收心跳信号成功")
+            print("接收心跳信号成功")
     elif json_data["message_type"] == "private":
         nickName = json_data["sender"]["nickname"]
         msg = msgFormat(json_data["message"])
@@ -68,8 +68,7 @@ async def recvMsg():
         elif FCM == "True":
             await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id':KEY,'title':nickName,'message':msg,'type':'privateMsg'})
         elif TG == "True":
-            # https://api.telegram.org/bot（ 这里加上你的token ）/sendMessage?chat_id=66666666&text=
-            text = nickName + ":"+ msg
+            text = nickName + ":%0A" + msg
             url = 'https://' + TG_API + '/bot' + KEY + '/sendMessage?chat_id=' + TG_ID + '&text=' + text
             await httpx.AsyncClient().post(url)
     elif json_data["message_type"] == "group":
@@ -84,7 +83,7 @@ async def recvMsg():
             if FCM == "True":
                 await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id':'%s'%KEY,'title':groupName,'message':'%s:%s'%(nickName,msg),'type':'groupMsg'})
             if TG == "True":
-                text = nickName + "(" + groupName + ")" + ":" + msg
+                text = nickName + "(#" + groupName + ")" + ":%0A" + msg
                 url = 'https://' + TG_API + '/bot' + KEY + '/sendMessage?chat_id=' + TG_ID + '&text=' + text
                 await httpx.AsyncClient().post(url)
         elif "[CQ:at,qq=%s]"%userId in msg:
@@ -95,7 +94,7 @@ async def recvMsg():
             if FCM == "True":
                 await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id':'%s'%KEY,'title':groupName,'message':'%s:%s'%(nickName,msg),'type':'groupMsg'})
             if TG == "True":
-                text = nickName + "(" + groupName + ")" + ":" + msg
+                text = nickName + "（#" + groupName + "）" + ":%0A" + msg
                 url = 'https://' + TG_API + '/bot' + KEY + '/sendMessage?chat_id=' + TG_ID + '&text=' + text
                 await httpx.AsyncClient().post(url)
     return "200 OK"
