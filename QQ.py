@@ -5,7 +5,9 @@ from flask import Flask,request,jsonify
 import json
 import requests
 import httpx
-import urllib
+# import urllib
+import urllib.parse
+import re
 
 try:
     with open("config.json","r",encoding = 'UTF-8') as f:
@@ -66,7 +68,7 @@ def msgFormat(msg):
         mini_json = json.loads(re.findall('{"app":"com.tencent.miniapp.*?,"text":"","sourceAd":""}', msg))
         mini_title = mini_json["prompt"]
         if "detail_1" in msg:
-            mini_url = urllib.quote(mini_json["meta"]["detail_1"]["qqdocurl"])
+            mini_url = urllib.parse.quote(mini_json["meta"]["detail_1"]["qqdocurl"])
             mini_desc = mini_json["meta"]["detail_1"]["desc"]
         else:
             mini_url = ""
@@ -163,7 +165,7 @@ async def recvMsg():
         elif FCM == "True":
             await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id':KEY,'title':nickName,'message':msg,'type':'privateMsg'})
         elif TG == "True":
-            msg = urllib.quote(msg)
+            msg = urllib.parse.quote(msg)
             text = nickName + ":%0A" + msg
             url = 'https://' + TG_API + '/bot' + KEY + '/sendMessage?chat_id=' + TG_ID + '&text=' + text
             await httpx.AsyncClient().post(url)
@@ -183,10 +185,10 @@ async def recvMsg():
                 if TG_API == "":
                     TG_API = "api.telegram.org"
                 if card != "":
-                    msg = urllib.quote(msg)
+                    msg = urllib.parse.quote(msg)
                     text = card + "[" + groupName + "]" + ":%0A" + msg
                 else:
-                    msg = urllib.quote(msg)
+                    msg = urllib.parse.quote(msg)
                     text = nickName + "[" + groupName + "]" + ":%0A" + msg
                 url = 'https://' + TG_API + '/bot' + KEY + '/sendMessage?chat_id=' + TG_ID + '&text=' + text
                 await httpx.AsyncClient().post(url)
@@ -201,10 +203,10 @@ async def recvMsg():
                 if TG_API == "":
                     TG_API = "api.telegram.org"
                 if card != "":
-                    msg = urllib.quote(msg)
+                    msg = urllib.parse.quote(msg)
                     text = card + "[" + groupName + "]" + ":%0A" + msg
                 else:
-                    msg = urllib.quote(msg)
+                    msg = urllib.parse.quote(msg)
                     text = nickName + "[" + groupName + "]" + ":%0A" + msg
                 url = 'https://' + TG_API + '/bot' + KEY + '/sendMessage?chat_id=' + TG_ID + '&text=' + text
                 await httpx.AsyncClient().post(url)
