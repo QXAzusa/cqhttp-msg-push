@@ -117,20 +117,20 @@ async def recvMsg():
                 nickname = getnickname(json_data["user_id"])
                 msg = nickname + "(" + userId + ")" + " 加入了 " + groupName
                 noticepush(msg)
-        if json_data["notice_type"] == "group_upload":
-            if json_data["group_id"] in group_whitelist:
-                groupId = json_data["group_id"]
-                groupName = getGroupName(groupId)
-                file_name = json_data["file"]["name"]
-                user_id = json_data["user_id"]
-                card_url = 'http://localhost:5700/get_group_member_info?group_id' + groupId + "?user_id=" + user_id
-                card_json = json.loads(requests.get(card_url).content)
-                if card_json["data"]["card"] == "":
-                    name = card_json["data"]["nickname"]
-                else:
-                    name = card = card_json["data"]["card"]
-                msg = name + "上传了 " + file_name + " 到 " + groupName
-                noticepush(msg)
+        #if json_data["notice_type"] == "group_upload":
+        #    if json_data["group_id"] in group_whitelist:
+        #        groupId = json_data["group_id"]
+        #        groupName = getGroupName(groupId)
+        #        file_name = json_data["file"]["name"]
+        #        user_id = json_data["user_id"]
+        #        card_url = 'http://localhost:5700/get_group_member_info?group_id' + groupId + "?user_id=" + user_id
+        #        card_json = json.loads(requests.get(card_url).content)
+        #        if card_json["data"]["card"] == "":
+        #            name = card_json["data"]["nickname"]
+        #        else:
+        #            name = card = card_json["data"]["card"]
+        #        msg = name + "上传了 " + file_name + " 到 " + groupName
+        #        noticepush(msg)
     elif json_data["message_type"] == "private":
         nickName = json_data["sender"]["nickname"]
         msg = msgFormat(json_data["message"])
