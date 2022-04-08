@@ -105,32 +105,54 @@ async def recvMsg():
     elif json_data["post_type"] == "notice":
         if json_data["notice_type"] == "group_decrease":
             if json_data["group_id"] in group_whitelist:
-                groupId = json_data["group_id"]
-                groupName = getGroupName(groupId)
+                groupName = getGroupName(json_data["group_id"])
                 nickname = getnickname(json_data["user_id"])
                 msg = nickname + "(" + userId + ")" + " 离开了 " + groupName
-                noticepush(msg)
+                if MiPush == "True":
+                    await httpx.AsyncClient().post("https://tdtt.top/send",data={'title':"QQ通知",'content':'%s'%(msg),'alias':KEY})
+                if FCM == "True":
+                    await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id':KEY,'title':"QQ通知",'message':msg,'type':'privateMsg'})
+                if TG == "True":
+                    if TG_API == "":
+                        TG_API = "api.telegram.org"
+                    url = 'https://' + TG_API + '/bot' + KEY + '/sendMessage?chat_id=' + TG_ID + '&text=' + msg
+                    await httpx.AsyncClient().post(url)
         if json_data["notice_type"] == "group_increase":
+            if json_data["group_id"] in group_whitelist:
+                groupName = getGroupName(json_data["group_id"])
+                nickname = getnickname(json_data["user_id"])
+                msg = nickname + "(" + userId + ")" + " 加入了 " + groupName
+                if MiPush == "True":
+                    await httpx.AsyncClient().post("https://tdtt.top/send",data={'title':"QQ通知",'content':'%s'%(msg),'alias':KEY})
+                if FCM == "True":
+                    await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id':KEY,'title':"QQ通知",'message':msg,'type':'privateMsg'})
+                if TG == "True":
+                    if TG_API == "":
+                        TG_API = "api.telegram.org"
+                    url = 'https://' + TG_API + '/bot' + KEY + '/sendMessage?chat_id=' + TG_ID + '&text=' + msg
+                    await httpx.AsyncClient().post(url)
+        if json_data["notice_type"] == "group_upload":
             if json_data["group_id"] in group_whitelist:
                 groupId = json_data["group_id"]
                 groupName = getGroupName(groupId)
-                nickname = getnickname(json_data["user_id"])
-                msg = nickname + "(" + userId + ")" + " 加入了 " + groupName
-                noticepush(msg)
-        #if json_data["notice_type"] == "group_upload":
-        #    if json_data["group_id"] in group_whitelist:
-        #        groupId = json_data["group_id"]
-        #        groupName = getGroupName(groupId)
-        #        file_name = json_data["file"]["name"]
-        #        user_id = json_data["user_id"]
-        #        card_url = 'http://localhost:5700/get_group_member_info?group_id' + groupId + "?user_id=" + user_id
-        #        card_json = json.loads(requests.get(card_url).content)
-        #        if card_json["data"]["card"] == "":
-        #            name = card_json["data"]["nickname"]
-        #        else:
-        #            name = card = card_json["data"]["card"]
-        #        msg = name + "上传了 " + file_name + " 到 " + groupName
-        #        noticepush(msg)
+                file_name = json_data["file"]["name"]
+                user_id = json_data["user_id"]
+                card_url = 'http://localhost:5700/get_group_member_info?group_id' + groupId + "?user_id=" + user_id
+                card_json = json.loads(requests.get(card_url).content)
+                if card_json["data"]["card"] == "":
+                    name = card_json["data"]["nickname"]
+                else:
+                    name = card = card_json["data"]["card"]
+                msg = name + "上传了 " + file_name + " 到 " + groupName
+                if MiPush == "True":
+                    await httpx.AsyncClient().post("https://tdtt.top/send",data={'title':"QQ通知",'content':'%s'%(msg),'alias':KEY})
+                if FCM == "True":
+                    await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id':KEY,'title':"QQ通知",'message':msg,'type':'privateMsg'})
+                if TG == "True":
+                    if TG_API == "":
+                        TG_API = "api.telegram.org"
+                    url = 'https://' + TG_API + '/bot' + KEY + '/sendMessage?chat_id=' + TG_ID + '&text=' + msg
+                    await httpx.AsyncClient().post(url)
     elif json_data["message_type"] == "private":
         nickName = json_data["sender"]["nickname"]
         msg = msgFormat(json_data["message"])
