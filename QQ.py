@@ -5,7 +5,6 @@ from flask import Flask,request,jsonify
 import json
 import requests
 import httpx
-# import urllib
 import urllib.parse
 import re
 
@@ -34,16 +33,18 @@ app = Flask(__name__)
 
 def msgFormat(msg):
     if "CQ:image" in msg:
-        # if TG == "True":
-            # raw_msg = msg
-            # image_id = re.findall('(?<=file=).*?(?=.image)', msg)
-            # req_url = 'http://localhost:5700/get_image?file='+ image_id +'.image'
-            # image_json = json.loads(requests.get(req_url).content)
-            # image_url = image_json["data"]["url"]
-            # image = urllib.quote(image_url)
-            # msg = raw_msg + "[图片]%0A" + image
-        # else:
-            msg = msg
+        if TG == "True":
+            imageurl = re.findall('(?<=.image,url=).*?(?=,subType=)', msg)
+            cqcode = re.findall('\[CQ:image.*?]', msg)
+            cqcode = ' '.join(cqcode)
+            imageurl = ' '.join(imageurl)
+            renew = '[图片 Url:' + imageurl + ']'
+            msg = msg.replace(cqcode, renew)
+        else:
+            cqcode = re.findall('\[CQ:image.*?]', msg)
+            cqcode = ' '.join(cqcode)
+            msg = msg.replace(cqcode, '[图片]')
+        msg = msg
     elif "CQ:record" in msg:
         msg = "[语音]"
     elif "CQ:share" in msg:
@@ -57,19 +58,22 @@ def msgFormat(msg):
     elif "戳一戳" in msg:
         msg = "戳了你一下"
     elif "CQ:at" in msg:
-        at_id = re.findall('(?<=qq=).*?(?=])', msg)
-        at_imf_url = 'http://localhost:5700/get_group_member_info?group_id' + groupId + "?user_id=" + at_id
-        at_imf = json.loads(requests.get(at_imf_url).content)
-        if at_imf["data"]["card"] != "":
-            msg = "@" + at_imf["data"]["card"]
+        atid = re.findall('(?<=qq=).*?(?=])', msg)
+        atimfurl = 'http://localhost:5700/get_group_member_info?group_id' + str(groupId) + "?user_id=" + atid
+        atimf = json.loads(requests.get(atimfurl).content)
+        cqcode = re.findall('\[CQ:at.*?]', msg)
+        cqcode = ' '.join(cqcode)
+        if atimf["data"]["card"] != "":
+            at = "@" + atimf["data"]["card"] + ""
         else:
-            msg = "@" + at_imf["data"]["nickname"]
+            at = "@" + atimf["data"]["nickname"] + ""
+        msg = msg.replace(cqcode, at)
     elif "com.tencent.miniapp" in msg:
-        mini_json = json.loads(re.findall('{"app":"com.tencent.miniapp.*?,"text":"","sourceAd":""}', msg))
-        mini_title = mini_json["prompt"]
+        minijson = json.loads(re.findall('{"app":"com.tencent.miniapp.*?,"text":"","sourceAd":""}', msg))
+        mini_title = minijson["prompt"]
         if "detail_1" in msg:
-            mini_url = urllib.parse.quote(mini_json["meta"]["detail_1"]["qqdocurl"])
-            mini_desc = mini_json["meta"]["detail_1"]["desc"]
+            mini_url = urllib.parse.quote(minijson["meta"]["detail_1"]["qqdocurl"])
+            mini_desc = minijson["meta"]["detail_1"]["desc"]
         else:
             mini_url = ""
             mini_desc = ""
@@ -92,9 +96,9 @@ def getGroupName(groupId):
             return groupInfo["data"][i]["group_name"]
 
 def getnickname(id):
-    url = 'http://localhost:5700/get_stranger_info?user_id=' + id
-    nickname_json = json.loads(requests.get(url).content)
-    nickname = nickname_json["data"]["nickname"]
+    url = 'http://localhost:5700/get_stranger_info?user_id=' + str(id)
+    jsonnickname = json.loads(requests.get(url).content)
+    nickname = jsonnickname["data"]["nickname"]
     return nickname
 
 @app.route("/",methods=['POST'])
@@ -118,6 +122,7 @@ async def recvMsg():
                 if TG == "True":
                     if TG_API == "":
                         TG_API = "api.telegram.org"
+                    msg = urllib.parse.quote(msg)
                     url = 'https://' + TG_API + '/bot' + KEY + '/sendMessage?chat_id=' + TG_ID + '&text=' + msg
                     await httpx.AsyncClient().post(url)
         if json_data["notice_type"] == "group_increase":
@@ -132,6 +137,7 @@ async def recvMsg():
                 if TG == "True":
                     if TG_API == "":
                         TG_API = "api.telegram.org"
+                    msg = urllib.parse.quote(msg)
                     url = 'https://' + TG_API + '/bot' + KEY + '/sendMessage?chat_id=' + TG_ID + '&text=' + msg
                     await httpx.AsyncClient().post(url)
         if json_data["notice_type"] == "group_upload":
@@ -140,13 +146,13 @@ async def recvMsg():
                 groupName = getGroupName(groupId)
                 file_name = json_data["file"]["name"]
                 user_id = json_data["user_id"]
-                card_url = 'http://localhost:5700/get_group_member_info?group_id' + groupId + "?user_id=" + user_id
+                card_url = 'http://localhost:5700/get_group_member_info?group_id' + str(groupId) + "?user_id=" + str(user_id)
                 card_json = json.loads(requests.get(card_url).content)
                 if card_json["data"]["card"] == "":
                     name = card_json["data"]["nickname"]
                 else:
-                    name = card = card_json["data"]["card"]
-                msg = name + "上传了 " + file_name + " 到 " + groupName
+                    name = card_json["data"]["card"]
+                msg = name + '上传了 ' + file_name + ' 到 ' + groupName
                 if MiPush == "True":
                     await httpx.AsyncClient().post("https://tdtt.top/send",data={'title':"QQ通知",'content':'%s'%(msg),'alias':KEY})
                 if FCM == "True":
@@ -154,6 +160,7 @@ async def recvMsg():
                 if TG == "True":
                     if TG_API == "":
                         TG_API = "api.telegram.org"
+                    msg = urllib.parse.quote(msg)
                     url = 'https://' + TG_API + '/bot' + KEY + '/sendMessage?chat_id=' + TG_ID + '&text=' + msg
                     await httpx.AsyncClient().post(url)
     elif json_data["message_type"] == "private":
@@ -165,9 +172,9 @@ async def recvMsg():
         elif FCM == "True":
             await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id':KEY,'title':nickName,'message':msg,'type':'privateMsg'})
         elif TG == "True":
+            msg = nickName + ":%0A" + msg
             msg = urllib.parse.quote(msg)
-            text = nickName + ":%0A" + msg
-            url = 'https://' + TG_API + '/bot' + KEY + '/sendMessage?chat_id=' + TG_ID + '&text=' + text
+            url = 'https://' + TG_API + '/bot' + KEY + '/sendMessage?chat_id=' + TG_ID + '&text=' + msg
             await httpx.AsyncClient().post(url)
     elif json_data["message_type"] == "group":
         groupId = json_data["group_id"]
@@ -204,11 +211,11 @@ async def recvMsg():
                     TG_API = "api.telegram.org"
                 if card != "":
                     msg = urllib.parse.quote(msg)
-                    text = card + "[" + groupName + "]" + ":%0A" + msg
+                    msg = card + "[" + groupName + "]" + ":%0A" + msg
                 else:
                     msg = urllib.parse.quote(msg)
-                    text = nickName + "[" + groupName + "]" + ":%0A" + msg
-                url = 'https://' + TG_API + '/bot' + KEY + '/sendMessage?chat_id=' + TG_ID + '&text=' + text
+                    msg = nickName + "[" + groupName + "]" + ":%0A" + msg
+                url = 'https://' + TG_API + '/bot' + KEY + '/sendMessage?chat_id=' + TG_ID + '&text=' + msg
                 await httpx.AsyncClient().post(url)
     return "200 OK"
 
