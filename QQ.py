@@ -210,17 +210,5 @@ async def recvMsg():
                 await httpx.AsyncClient().post(url)
     return "200 OK"
 
-def noticepush(msg):
-    global TG_API
-    if MiPush == "True":
-        await httpx.AsyncClient().post("https://tdtt.top/send",data={'title':"QQ通知",'content':'%s'%(msg),'alias':KEY})
-    if FCM == "True":
-        await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id':KEY,'title':"QQ通知",'message':msg,'type':'privateMsg'})
-    if TG == "True":
-        if TG_API == "":
-            TG_API = "api.telegram.org"
-        url = 'https://' + TG_API + '/bot' + KEY + '/sendMessage?chat_id=' + TG_ID + '&text=' + msg
-        await httpx.AsyncClient().post(url)
-
 if __name__ == '__main__':
     app.run(host="0.0.0.0",port=5000)
