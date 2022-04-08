@@ -97,6 +97,7 @@ def getnickname(id):
 
 @app.route("/",methods=['POST'])
 async def recvMsg():
+    global TG_API
     data = request.get_data()
     json_data = json.loads(data.decode("utf-8"))
     if json_data["post_type"] == "meta_event":
@@ -179,7 +180,7 @@ async def recvMsg():
             if FCM == "True":
                 await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id':'%s'%KEY,'title':groupName,'message':'%s:%s'%(nickName,msg),'type':'groupMsg'})
             if TG == "True":
-                if TG_API == ""
+                if TG_API == "":
                     TG_API = "api.telegram.org"
                 if card != "":
                     msg = urllib.quote(msg)
@@ -197,7 +198,7 @@ async def recvMsg():
             if FCM == "True":
                 await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id':'%s'%KEY,'title':groupName,'message':'%s:%s'%(nickName,msg),'type':'groupMsg'})
             if TG == "True":
-                if TG_API == ""
+                if TG_API == "":
                     TG_API = "api.telegram.org"
                 if card != "":
                     msg = urllib.quote(msg)
@@ -210,6 +211,7 @@ async def recvMsg():
     return "200 OK"
 
 def noticepush(msg):
+    global TG_API
     if MiPush == "True":
         await httpx.AsyncClient().post("https://tdtt.top/send",data={'title':"QQ通知",'content':'%s'%(msg),'alias':KEY})
     if FCM == "True":
