@@ -140,6 +140,7 @@ async def recvMsg():
         elif FCM == "True":
             await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id':KEY,'title':nickName,'message':msg,'type':'privateMsg'})
         elif TG == "True":
+            msg = urllib.quote(msg)
             text = nickName + ":%0A" + msg
             url = 'https://' + TG_API + '/bot' + KEY + '/sendMessage?chat_id=' + TG_ID + '&text=' + text
             await httpx.AsyncClient().post(url)
@@ -156,9 +157,13 @@ async def recvMsg():
             if FCM == "True":
                 await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id':'%s'%KEY,'title':groupName,'message':'%s:%s'%(nickName,msg),'type':'groupMsg'})
             if TG == "True":
+                if TG_API == ""
+                    TG_API = "api.telegram.org"
                 if card != "":
+                    msg = urllib.quote(msg)
                     text = card + "[" + groupName + "]" + ":%0A" + msg
                 else:
+                    msg = urllib.quote(msg)
                     text = nickName + "[" + groupName + "]" + ":%0A" + msg
                 url = 'https://' + TG_API + '/bot' + KEY + '/sendMessage?chat_id=' + TG_ID + '&text=' + text
                 await httpx.AsyncClient().post(url)
@@ -170,9 +175,13 @@ async def recvMsg():
             if FCM == "True":
                 await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id':'%s'%KEY,'title':groupName,'message':'%s:%s'%(nickName,msg),'type':'groupMsg'})
             if TG == "True":
+                if TG_API == ""
+                    TG_API = "api.telegram.org"
                 if card != "":
+                    msg = urllib.quote(msg)
                     text = card + "[" + groupName + "]" + ":%0A" + msg
                 else:
+                    msg = urllib.quote(msg)
                     text = nickName + "[" + groupName + "]" + ":%0A" + msg
                 url = 'https://' + TG_API + '/bot' + KEY + '/sendMessage?chat_id=' + TG_ID + '&text=' + text
                 await httpx.AsyncClient().post(url)
@@ -184,6 +193,8 @@ def noticepush(msg):
     if FCM == "True":
         await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id':KEY,'title':"QQ通知",'message':msg,'type':'privateMsg'})
     if TG == "True":
+        if TG_API == "":
+            TG_API = "api.telegram.org"
         url = 'https://' + TG_API + '/bot' + KEY + '/sendMessage?chat_id=' + TG_ID + '&text=' + msg
         await httpx.AsyncClient().post(url)
 
