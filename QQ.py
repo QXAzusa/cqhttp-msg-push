@@ -59,16 +59,17 @@ def msgFormat(msg):
     elif "CQ:at" in msg:
         if json_data["message_type"] == "group":
             atid = re.findall('(?<=qq=).*?(?=])', msg)
-            atid = ' '.join(atid)
-            atimfurl = 'http://localhost:5700/get_group_member_info?group_id' + str(groupId) + "?user_id=" + str(atid)
-            atimf = json.loads(requests.get(atimfurl).content)
-            cqcode = re.findall('\[CQ:at.*?]', msg)
-            cqcode = ' '.join(cqcode)
-            if atimf["data"]["card"] != "":
-                at = "@" + atimf["data"]["card"] + ""
-            else:
-                at = "@" + atimf["data"]["nickname"] + ""
-            msg = msg.replace(cqcode, at)
+            for uid in atid:
+                atimfurl = 'http://localhost:5700/get_group_member_info?group_id' + str(groupId) + "?user_id=" + str(uid)
+                imf = json.loads(requests.get(atimfurl).content)
+                regex1 = re.compile(r'\[CQ:at,qq=' + uid + ']')
+                cqcode = regex1.search(msg)
+                cqcode = (cqcode.group())
+                if imf["data"]["card"] != "":
+                    at = "@" + imf["data"]["card"] + " "
+                else:
+                    at = "@" + imf["data"]["nickname"] + " "
+                msg = msg.replace(cqcode, at)
         else:
             msg = msg
     elif "com.tencent.miniapp" in msg:
