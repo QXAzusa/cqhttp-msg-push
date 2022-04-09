@@ -17,6 +17,7 @@ try:
     KEY = config["KEY"]
     TG_ID = config["TG_UID"]
     TG_API = config["TG_API"]
+    TG_GroupLink = config["TG_GroupLink"]
 except:
     print("读取配置文件异常,请检查配置文件是否存在或语法是否有问题")
     assert()
@@ -107,7 +108,7 @@ def getnickname(id):
 
 @app.route("/",methods=['POST'])
 async def recvMsg():
-    global TG_API
+    global TG_API,TG_ID
     data = request.get_data()
     json_data = json.loads(data.decode("utf-8"))
     if json_data["post_type"] == "meta_event":
@@ -126,6 +127,8 @@ async def recvMsg():
                 if TG == "True":
                     if TG_API == "":
                         TG_API = "api.telegram.org"
+                    if str(groupId) in TG_GroupLink:
+                        TG_ID = TG_GroupLink[str(groupId)]
                     msg = urllib.parse.quote(msg)
                     url = 'https://' + TG_API + '/bot' + KEY + '/sendMessage?chat_id=' + TG_ID + '&text=' + msg
                     await httpx.AsyncClient().post(url)
@@ -141,6 +144,8 @@ async def recvMsg():
                 if TG == "True":
                     if TG_API == "":
                         TG_API = "api.telegram.org"
+                    if str(groupId) in TG_GroupLink:
+                        TG_ID = TG_GroupLink[str(groupId)]
                     msg = urllib.parse.quote(msg)
                     url = 'https://' + TG_API + '/bot' + KEY + '/sendMessage?chat_id=' + TG_ID + '&text=' + msg
                     await httpx.AsyncClient().post(url)
@@ -164,19 +169,25 @@ async def recvMsg():
                 if TG == "True":
                     if TG_API == "":
                         TG_API = "api.telegram.org"
+                    if str(groupId) in TG_GroupLink:
+                        TG_ID = TG_GroupLink[str(groupId)]
                     msg = urllib.parse.quote(msg)
                     url = 'https://' + TG_API + '/bot' + KEY + '/sendMessage?chat_id=' + TG_ID + '&text=' + msg
                     await httpx.AsyncClient().post(url)
     elif json_data["message_type"] == "private":
         nickName = json_data["sender"]["nickname"]
         msg = msgFormat(json_data["message"])
+        uid = json_data["sender"]["user_id"]
         print("来自%s的私聊消息:%s"%(nickName,msg))
         if MiPush == "True":
             await httpx.AsyncClient().post("https://tdtt.top/send",data={'title':nickName,'content':'%s'%(msg),'alias':KEY})
         elif FCM == "True":
             await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id':KEY,'title':nickName,'message':msg,'type':'privateMsg'})
         elif TG == "True":
-            msg = nickName + ":%0A" + msg
+            if TG_API == "":
+                TG_API = "api.telegram.org"
+            if str(uid) in TG_GroupLink:
+                TG_ID = TG_GroupLink[str(uid)]
             msg = urllib.parse.quote(msg)
             url = 'https://' + TG_API + '/bot' + KEY + '/sendMessage?chat_id=' + TG_ID + '&text=' + msg
             await httpx.AsyncClient().post(url)
@@ -198,6 +209,8 @@ async def recvMsg():
             if TG == "True":
                 if TG_API == "":
                     TG_API = "api.telegram.org"
+                if str(groupId) in TG_GroupLink:
+                    TG_ID = TG_GroupLink[str(groupId)]
                 if card != "":
                     msg = urllib.parse.quote(msg)
                     text = card + "[" + groupName + "]" + ":%0A" + msg
@@ -222,6 +235,8 @@ async def recvMsg():
             if TG == "True":
                 if TG_API == "":
                     TG_API = "api.telegram.org"
+                if str(groupId) in TG_GroupLink:
+                    TG_ID = TG_GroupLink[str(groupId)]
                 if card != "":
                     msg = urllib.parse.quote(msg)
                     msg = card + "[" + groupName + "]" + ":%0A" + msg
