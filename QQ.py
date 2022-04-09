@@ -56,6 +56,20 @@ def msgFormat(msg):
         msg = "[红包]"
     elif "CQ:forward" in msg:
         msg = "[合并转发]"
+    elif "CQ:reply" in msg:
+        cqcode = re.findall('\[CQ:reply.*?]', msg)
+        replymsg = re.findall('(?<=\[CQ:reply,text=).*?(?=,qq=)', cqcode)
+        replyid = re.findall('(?<=\,qq=).*?(?=,time=)', cqcode)
+        replymsg = ' '.join(replymsg)
+        replyid = ' '.join(replyid)
+        replycard = getmembercard(replyid)
+        if TG == "True":
+            renew = '回复 '+ ' ' + replycard + '' + replymsg + '%0A'
+            msg = msg.replace(cqcode, renew)
+        else:
+            renew = '回复 ' + ' ' + replycard + '%0A'
+            msg = msg.replace(code, renew)
+        msg = msg
     elif "戳一戳" in msg:
         msg = "戳了你一下"
     elif "CQ:at" in msg:
@@ -109,7 +123,14 @@ def getnickname(id):
     url = 'http://localhost:5700/get_stranger_info?user_id=' + str(id)
     jsonnickname = json.loads(requests.get(url).text)
     return jsonnickname["data"]["nickname"]
-
+def getmembercard(id):
+    cardurl = 'http://localhost:5700/get_group_member_info?group_id' + str(groupId) + "?user_id=" + str(id)
+    cardjson = json.loads(requests.get(cardurl).content)
+    if cardjson["data"]["card"] == "":
+        name = cardjson["data"]["nickname"]
+    else:
+        name = cardjson["data"]["card"]
+    return name
 @app.route("/",methods=['POST'])
 async def recvMsg():
     global TG_API,TG_ID
@@ -159,6 +180,7 @@ async def recvMsg():
                 groupName = getGroupName(groupId)
                 filename = json_data["file"]["name"]
                 userid = json_data["user_id"]
+                #name = getmembercard(userid) 替换line 184-189
                 cardurl = 'http://localhost:5700/get_group_member_info?group_id' + str(groupId) + "?user_id=" + str(user_id)
                 cardjson = json.loads(requests.get(cardurl).content)
                 if cardjson["data"]["card"] == "":
