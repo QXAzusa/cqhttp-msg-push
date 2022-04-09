@@ -33,16 +33,16 @@ app = Flask(__name__)
 def msgFormat(msg):
     if "CQ:image" in msg:
         if TG == "True":
-            imageurl = re.findall('(?<=.image,url=).*?(?=,subType=)', msg)
             cqcode = re.findall('\[CQ:image.*?]', msg)
-            cqcode = ' '.join(cqcode)
-            imageurl = ' '.join(imageurl)
-            renew = '[图片 Url:' + imageurl + ']'
-            msg = msg.replace(cqcode, renew)
+            for code in cqcode:
+                imageurl = re.findall('(?<=.image,url=).*?(?=,subType=)', code)
+                imageurl = ' '.join(imageurl)
+                renew = '[图片 ' + imageurl + ']'
+                msg = msg.replace(code, renew)
         else:
             cqcode = re.findall('\[CQ:image.*?]', msg)
-            cqcode = ' '.join(cqcode)
-            msg = msg.replace(cqcode, '[图片]')
+            for code in cqcode:
+                msg = msg.replace(code, '[图片]')
         msg = msg
     elif "CQ:record" in msg:
         msg = "[语音]"
