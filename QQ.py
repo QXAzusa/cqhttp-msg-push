@@ -24,6 +24,7 @@ except:
 
 try:
     groupInfo = json.loads(requests.get("http://localhost:5700/get_group_list").text)
+    friendInfo = json.loads(requests.get("http://localhost:5700/get_friend_list").text)
     userId = json.loads(requests.get("http://localhost:5700/get_login_info").text)["data"]["user_id"]
 except:
     print("无法从go-cqhttp获取信息,请检查go-cqhttp是否运行或端口配置是否正确")
@@ -99,12 +100,15 @@ def getGroupName(groupId):
     for i in range(length):
         if groupId == groupInfo["data"][i]["group_id"]:
             return groupInfo["data"][i]["group_name"]
-
+def getremark(uid):
+    length = len(friendInfo["data"])
+    for i in range(length):
+        if friendInfo == friendInfo["data"][i]["user_id"]:
+            return friendInfo["data"][i]["remark"]
 def getnickname(id):
     url = 'http://localhost:5700/get_stranger_info?user_id=' + str(id)
-    jsonnickname = json.loads(requests.get(url).content)
-    nickname = jsonnickname["data"]["nickname"]
-    return nickname
+    jsonnickname = json.loads(requests.get(url).text)
+    return jsonnickname["data"]["nickname"]
 
 @app.route("/",methods=['POST'])
 async def recvMsg():
@@ -178,6 +182,9 @@ async def recvMsg():
         nickName = json_data["sender"]["nickname"]
         msg = msgFormat(json_data["message"])
         uid = json_data["sender"]["user_id"]
+        remark = getnickname(uid)
+        if remark != "":
+            nickName = remark
         print("来自%s的私聊消息:%s"%(nickName,msg))
         if MiPush == "True":
             await httpx.AsyncClient().post("https://tdtt.top/send",data={'title':nickName,'content':'%s'%(msg),'alias':KEY})
