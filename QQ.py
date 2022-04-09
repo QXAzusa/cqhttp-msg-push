@@ -1,5 +1,4 @@
 from email import message
-import json
 from tokenize import group
 from flask import Flask,request,jsonify
 import json
@@ -58,18 +57,22 @@ def msgFormat(msg):
     elif "戳一戳" in msg:
         msg = "戳了你一下"
     elif "CQ:at" in msg:
-        atid = re.findall('(?<=qq=).*?(?=])', msg)
-        atimfurl = 'http://localhost:5700/get_group_member_info?group_id' + str(groupId) + "?user_id=" + atid
-        atimf = json.loads(requests.get(atimfurl).content)
-        cqcode = re.findall('\[CQ:at.*?]', msg)
-        cqcode = ' '.join(cqcode)
-        if atimf["data"]["card"] != "":
-            at = "@" + atimf["data"]["card"] + ""
+        if json_data["message_type"] == "group":
+            atid = re.findall('(?<=qq=).*?(?=])', msg)
+            atid = ' '.join(atid)
+            atimfurl = 'http://localhost:5700/get_group_member_info?group_id' + str(groupId) + "?user_id=" + str(atid)
+            atimf = json.loads(requests.get(atimfurl).content)
+            cqcode = re.findall('\[CQ:at.*?]', msg)
+            cqcode = ' '.join(cqcode)
+            if atimf["data"]["card"] != "":
+                at = "@" + atimf["data"]["card"] + ""
+            else:
+                at = "@" + atimf["data"]["nickname"] + ""
+            msg = msg.replace(cqcode, at)
         else:
-            at = "@" + atimf["data"]["nickname"] + ""
-        msg = msg.replace(cqcode, at)
+            msg = msg
     elif "com.tencent.miniapp" in msg:
-        minijson = json.loads(re.findall('{"app":"com.tencent.miniapp.*?,"text":"","sourceAd":""}', msg))
+        minijson = json.loads(re.findall('(?<=\[CQ:json,data=).*?(?=])', msg))
         mini_title = minijson["prompt"]
         if "detail_1" in msg:
             mini_url = urllib.parse.quote(minijson["meta"]["detail_1"]["qqdocurl"])
@@ -82,9 +85,9 @@ def msgFormat(msg):
         else:
             msg = mini_title + "%0A" + mini_desc
     elif "com.tencent.structmsg" in msg:
-        struct_json = json.loads(re.findall('{"app":"com.tencent.structmsg.*?,"text":"","sourceAd":""}', msg))
-        struct_title = struct_json["prompt"]
-        msg = struct_title
+        structjson = json.loads(re.findall('(?<=\[CQ:json,data=).*?(?=])', msg))
+        structtitle = structjson["prompt"]
+        msg = structtitle
     else:
         msg = msg
     return msg
@@ -185,7 +188,10 @@ async def recvMsg():
         if groupId in group_whitelist:
             print("群聊%s的消息:%s:%s"%(groupName,nickName,msg))
             if MiPush == "True":
-                await httpx.AsyncClient().post("https://tdtt.top/send",data={'title':'%s'%groupName,'content':'%s:%s'%(nickName,msg),'alias':KEY})
+                if card != "":
+                    await httpx.AsyncClient().post("https://tdtt.top/send", data={'title': '%s' % groupName,'content': '%s:%s' % (card, msg),'alias': KEY})
+                else:
+                    await httpx.AsyncClient().post("https://tdtt.top/send",data={'title':'%s'%groupName,'content':'%s:%s'%(nickName,msg),'alias':KEY})
             if FCM == "True":
                 await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id':'%s'%KEY,'title':groupName,'message':'%s:%s'%(nickName,msg),'type':'groupMsg'})
             if TG == "True":
@@ -203,9 +209,15 @@ async def recvMsg():
             msg = msg.replace("[CQ:at,qq=%s]"%userId,"[有人@我]")
             print("群聊%s有人@我:%s:%s"%(groupName,nickName,msg))
             if MiPush == "True":
-                await httpx.AsyncClient().post("https://tdtt.top/send",data={'title':'%s'%groupName,'content':'%s:%s'%(nickName,msg),'alias':KEY})
+                if card != "":
+                    await httpx.AsyncClient().post("https://tdtt.top/send",data={'title':'%s'%groupName,'content':'%s:%s'%(card,msg),'alias':KEY})
+                else:
+                    await httpx.AsyncClient().post("https://tdtt.top/send",data={'title': '%s' % groupName, 'content': '%s:%s' % (nickName, msg),'alias': KEY})
             if FCM == "True":
-                await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id':'%s'%KEY,'title':groupName,'message':'%s:%s'%(nickName,msg),'type':'groupMsg'})
+                if card != "":
+                    await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id': '%s' % KEY, 'title': groupName,'message': '%s:%s' % (card, msg), 'type': 'groupMsg'})
+                else:
+                    await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id':'%s'%KEY,'title':groupName,'message':'%s:%s'%(nickName,msg),'type':'groupMsg'})
             if TG == "True":
                 if TG_API == "":
                     TG_API = "api.telegram.org"
