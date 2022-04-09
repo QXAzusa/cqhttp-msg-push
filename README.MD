@@ -7,13 +7,41 @@ master分支是对原项目功能的补充和Bug修复、patch分支仅针对原
 ！未测试，切勿依赖！3.使用TG推送时能够将小程序转换为链接<br>
 ！未完善，切勿依赖！4.能对群组的系统通知进行推送（群成员变动）<br>
 ## 使用方法
+### 运行环境
+Python 3
+### 运行方法
+以"git clone" 或 "Download zip"方式下载项目,在项目目录下执行`pip3 install -r requirements.txt`安装依赖。成下方配置后先打开go-cqhttp，根据提示登录QQ，待提示服务端启动成功时运行此脚本，两个程序必须同时运行。
+### go-cqhttp
+第一次运行请根据提示选择“http通信”生成配置文件<br>
+在配置文件中填写好账号密码 修改结尾服务配置
+```yaml
+# 连接服务列表
+servers:
+  # HTTP 通信设置
+  - http:
+      # 服务端监听地址
+      host: 127.0.0.1
+      # 服务端监听端口
+      port: 5700
+      # 反向HTTP超时时间, 单位秒
+      # 最小值为5，小于5将会忽略本项设置
+      timeout: 5
+      middlewares:
+        <<: *default # 引用默认中间件
+      # 反向HTTP POST地址列表
+      post:
+      #- url: '' # 地址
+      #  secret: ''           # 密钥
+      - url: http://127.0.0.1:5000/ # 地址
+      #  secret: ''          # 密钥
+```
 ### MiPush
 前往酷安下载安装“<a href="https://www.coolapk.com/apk/top.tdtt.news">消息接收</a>”，显示注册成功后，点击设置别名，尽量设置复杂一点。设置完后记得设置的别名。
 ### FCM
 前往Google Play搜索安装“<a href="https://play.google.com/store/apps/details?id=com.mrivan.wirepusher">WirePusher</a>”，安装好后打开，记录ID
 ### Telegram Bot
 前往<a href="https://t.me/BotFather">@BotFather</a>，发送/newbot，根据指引创建机器人，保存创建后提供的token，最后发送/start给机器人
-## config.js参数说明
+### config.js参数填写
 |    名称     |                                  介绍                                   |    可填写     |   必填项    |
 |:---------:|:---------------------------------------------------------------------:|:----------:|:--------:|
 |  Mipush   |                               MiPush选择                                | True/False |   ✔ 三选一   |
@@ -23,3 +51,5 @@ master分支是对原项目功能的补充和Bug修复、patch分支仅针对原
 | WhiteList |                              需要推送群消息的群号                               |     数值     |    ✔     |
 |  TG_UID   |                             需要接收消息的TG用户ID                             |     数值     |  TG推送必填  |
 |  TG_API   |                             TG推送时所用API的域名                             |    字符串     | 可选，不填为默认 |
+## 开发计划
+https://github.com/QXAzusa/tencent-push/projects/1
