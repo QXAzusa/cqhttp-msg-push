@@ -148,15 +148,15 @@ async def recvMsg():
             if json_data["group_id"] in group_whitelist:
                 groupId = json_data["group_id"]
                 groupName = getGroupName(groupId)
-                file_name = json_data["file"]["name"]
-                user_id = json_data["user_id"]
-                card_url = 'http://localhost:5700/get_group_member_info?group_id' + str(groupId) + "?user_id=" + str(user_id)
-                card_json = json.loads(requests.get(card_url).content)
-                if card_json["data"]["card"] == "":
-                    name = card_json["data"]["nickname"]
+                filename = json_data["file"]["name"]
+                userid = json_data["user_id"]
+                cardurl = 'http://localhost:5700/get_group_member_info?group_id' + str(groupId) + "?user_id=" + str(user_id)
+                cardjson = json.loads(requests.get(cardurl).content)
+                if cardjson["data"]["card"] == "":
+                    name = cardjson["data"]["nickname"]
                 else:
-                    name = card_json["data"]["card"]
-                msg = name + '上传了 ' + file_name + ' 到 ' + groupName
+                    name = cardjson["data"]["card"]
+                msg = name + '上传了 ' + filename + ' 到 ' + groupName
                 if MiPush == "True":
                     await httpx.AsyncClient().post("https://tdtt.top/send",data={'title':"QQ通知",'content':'%s'%(msg),'alias':KEY})
                 if FCM == "True":
