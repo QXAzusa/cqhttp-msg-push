@@ -15,7 +15,7 @@ try:
     FCM = config["FCM"]
     TG = config["TG"]
     KEY = config["KEY"]
-    TG_ID = config["TG_UID"]
+    TG_UID = config["TG_UID"]
     TG_API = config["TG_API"]
     TG_GroupLink = config["TG_GroupLink"]
 except:
@@ -73,21 +73,13 @@ def msgFormat(msg):
     elif "戳一戳" in msg:
         msg = "戳了你一下"
     elif "CQ:at" in msg:
-        if json_data["message_type"] == "group":
-            atid = re.findall('(?<=qq=).*?(?=])', msg)
-            for uid in atid:
-                atimfurl = 'http://localhost:5700/get_group_member_info?group_id' + str(groupId) + "?user_id=" + str(uid)
-                imf = json.loads(requests.get(atimfurl).content)
-                regex1 = re.compile(r'\[CQ:at,qq=' + uid + ']')
-                cqcode = regex1.search(msg)
-                cqcode = (cqcode.group())
-                if imf["data"]["card"] != "":
-                    at = "@" + imf["data"]["card"] + " "
-                else:
-                    at = "@" + imf["data"]["nickname"] + " "
-                msg = msg.replace(cqcode, at)
-        else:
-            msg = msg
+        atid = re.findall('(?<=qq=).*?(?=])', msg)
+        for uid in atid:
+            regex1 = re.compile(r'\[CQ:at,qq=' + uid + ']')
+            cqcode = regex1.search(msg)
+            cqcode = (cqcode.group())
+            at = '@ ' + getmembercard(uid) + ''
+            msg = msg.replace(cqcode, at)
     elif "com.tencent.miniapp" in msg:
         minijson = json.loads(re.findall('(?<=\[CQ:json,data=).*?(?=])', msg))
         mini_title = minijson["prompt"]
@@ -124,12 +116,15 @@ def getnickname(id):
     jsonnickname = json.loads(requests.get(url).text)
     return jsonnickname["data"]["nickname"]
 def getmembercard(id):
-    cardurl = 'http://localhost:5700/get_group_member_info?group_id' + str(groupId) + "?user_id=" + str(id)
-    cardjson = json.loads(requests.get(cardurl).content)
-    if cardjson["data"]["card"] == "":
-        name = cardjson["data"]["nickname"]
+    if groupId != '':
+        cardurl = 'http://localhost:5700/get_group_member_info?group_id' + str(groupId) + "?user_id=" + str(id)
+        cardjson = json.loads(requests.get(cardurl).content)
+        if cardjson["data"]["card"] == "":
+            name = cardjson["data"]["nickname"]
+        else:
+            name = cardjson["data"]["card"]
     else:
-        name = cardjson["data"]["card"]
+        name = getnickname(id)
     return name
 @app.route("/",methods=['POST'])
 async def recvMsg():
@@ -180,13 +175,7 @@ async def recvMsg():
                 groupName = getGroupName(groupId)
                 filename = json_data["file"]["name"]
                 userid = json_data["user_id"]
-                #name = getmembercard(userid) 替换line 184-189
-                cardurl = 'http://localhost:5700/get_group_member_info?group_id' + str(groupId) + "?user_id=" + str(user_id)
-                cardjson = json.loads(requests.get(cardurl).content)
-                if cardjson["data"]["card"] == "":
-                    name = cardjson["data"]["nickname"]
-                else:
-                    name = cardjson["data"]["card"]
+                name = getmembercard(userid)
                 msg = name + '上传了 ' + filename + ' 到 ' + groupName
                 if MiPush == "True":
                     await httpx.AsyncClient().post("https://tdtt.top/send",data={'title':"QQ通知",'content':'%s'%(msg),'alias':KEY})
@@ -217,6 +206,8 @@ async def recvMsg():
                 TG_API = "api.telegram.org"
             if str(uid) in TG_GroupLink:
                 TG_ID = TG_GroupLink[str(uid)]
+            else:
+                TG_ID = TG_UID
             msg = urllib.parse.quote(msg)
             url = 'https://' + TG_API + '/bot' + KEY + '/sendMessage?chat_id=' + TG_ID + '&text=' + msg
             await httpx.AsyncClient().post(url)
@@ -240,6 +231,8 @@ async def recvMsg():
                     TG_API = "api.telegram.org"
                 if str(groupId) in TG_GroupLink:
                     TG_ID = TG_GroupLink[str(groupId)]
+                else:
+                    TG_ID = TG_UID
                 if card != "":
                     msg = urllib.parse.quote(msg)
                     text = card + "[" + groupName + "]" + ":%0A" + msg
@@ -266,6 +259,8 @@ async def recvMsg():
                     TG_API = "api.telegram.org"
                 if str(groupId) in TG_GroupLink:
                     TG_ID = TG_GroupLink[str(groupId)]
+                else:
+                    TG_ID = TG_UID
                 if card != "":
                     msg = urllib.parse.quote(msg)
                     msg = card + "[" + groupName + "]" + ":%0A" + msg
