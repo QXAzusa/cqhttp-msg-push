@@ -134,6 +134,14 @@ async def recvMsg():
     if json_data["post_type"] == "meta_event":
         if json_data["meta_event_type"] == "heartbeat":
             print("接收心跳信号成功")
+    elif json_data["post_type"] == "request":
+        if json_data["request_type"] == "friend":
+            friendId = json_data["user_id"]
+            print("新的好友添加请求：%s" % friendId)
+            if MiPush == "True":
+                await httpx.AsyncClient().post("https://tdtt.top/send",data={'title': "新的好友添加请求", 'content': '%s想要添加您为好友' % friendId,'alias': KEY})
+            elif FCM == "True":
+                    await httpx.AsyncClient().post("https://wirepusher.com/send", data={'id': KEY, 'title': "新的好友添加请求",'message': '%s想要添加您为好友' % friendId,'type': 'FriendAdd'})
     elif json_data["post_type"] == "notice":
         if json_data["notice_type"] == "group_decrease":
             if json_data["group_id"] in group_whitelist:
@@ -198,7 +206,7 @@ async def recvMsg():
             nickName = remark
         print("来自%s的私聊消息:%s"%(nickName,msg))
         if MiPush == "True":
-            await httpx.AsyncClient().post("https://tdtt.top/send",data={'title':nickName,'content':'%s'%(msg),'alias':KEY})
+            await httpx.AsyncClient().post("https://tdtt.top/send",data={'title':nickName,'content':msg,'alias':KEY})
         elif FCM == "True":
             await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id':KEY,'title':nickName,'message':msg,'type':'privateMsg'})
         elif TG == "True":
