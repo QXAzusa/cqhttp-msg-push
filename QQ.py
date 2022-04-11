@@ -77,12 +77,17 @@ def msgFormat(msg):
     elif "CQ:at" in msg:
         atid = re.findall('(?<=qq=).*?(?=])', msg)
         for uid in atid:
+            atimfurl = 'http://localhost:5700/get_group_member_info?group_id' + str(groupId) + "?user_id=" + str(uid)
+            imf = json.loads(requests.get(atimfurl).content)
             regex1 = re.compile(r'\[CQ:at,qq=' + uid + ']')
             cqcode = regex1.search(msg)
             cqcode = (cqcode.group())
-            at = '@ ' + getmembercard(uid) + ''
+            if imf["data"]["card"] != "":
+                at = "@" + imf["data"]["card"] + " "
+            else:
+                at = "@" + imf["data"]["nickname"] + " "
             msg = msg.replace(cqcode, at)
-    elif "com.tencent.miniapp" in msg:
+    elif 'com.tencent.miniapp' in msg:
         minijson = json.loads(re.findall('(?<=\[CQ:json,data=).*?(?=])', msg))
         mini_title = minijson["prompt"]
         if "detail_1" in msg:
@@ -117,17 +122,7 @@ def getnickname(id):
     url = 'http://localhost:5700/get_stranger_info?user_id=' + str(id)
     jsonnickname = json.loads(requests.get(url).text)
     return jsonnickname["data"]["nickname"]
-def getmembercard(id):
-    if groupId != '':
-        cardurl = 'http://localhost:5700/get_group_member_info?group_id' + str(groupId) + "?user_id=" + str(id)
-        cardjson = json.loads(requests.get(cardurl).content)
-        if cardjson["data"]["card"] == "":
-            name = cardjson["data"]["nickname"]
-        else:
-            name = cardjson["data"]["card"]
-    else:
-        name = getnickname(id)
-    return name
+
 @app.route("/",methods=['POST'])
 async def recvMsg():
     global TG_API,TG_ID,groupId
@@ -190,7 +185,13 @@ async def recvMsg():
                 filename = json_data["file"]["name"]
                 userid = json_data["user_id"]
                 name = getmembercard(userid)
-                msg = name + '上传了 ' + filename + ' 到 ' + groupName
+                cardurl = 'http://localhost:5700/get_group_member_info?group_id' + str(groupId) + "?user_id=" + str(uid)
+                card = json.loads(requests.get(cardurl).content)
+                if card["data"]["card"] != "":
+                    card = "@" + imf["data"]["card"] + " "
+                else:
+                    card = "@" + imf["data"]["nickname"] + " "
+                msg = card + '上传了 ' + filename + ' 到 ' + groupName
                 if MiPush == "True":
                     await httpx.AsyncClient().post("https://tdtt.top/send",data={'title':"QQ通知",'content':'%s'%(msg),'alias':KEY})
                 if FCM == "True":
