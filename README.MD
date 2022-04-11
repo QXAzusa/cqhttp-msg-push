@@ -1,5 +1,5 @@
 ## 提醒
-master分支是对原项目功能的补充和Bug修复、patch分支仅针对原项目的bug修复
+master分支是对原项目功能的补充和Bug修复、patch分支仅针对原项目的bug修复和功能完善
 ## 介绍
 这是一个能够对QQ消息通过第三方推送转发的程序，修改自<a href="https://github.com/zhishixiang/tencent-push">zhishixiang/tencent-push</a>项目。此版本相比原版有以下区别：  
 1.补充了Telegram机器人私聊推送渠道<br>
