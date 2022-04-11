@@ -128,7 +128,9 @@ def getmembercard(id):
     return name
 @app.route("/",methods=['POST'])
 async def recvMsg():
-    global TG_API,TG_ID
+    global TG_API,TG_ID,groupId
+    groupId = ''
+    TG_ID = ''
     data = request.get_data()
     json_data = json.loads(data.decode("utf-8"))
     if json_data["post_type"] == "meta_event":
@@ -145,6 +147,7 @@ async def recvMsg():
     elif json_data["post_type"] == "notice":
         if json_data["notice_type"] == "group_decrease":
             if json_data["group_id"] in group_whitelist:
+                groupId = json_data["group_id"]
                 groupName = getGroupName(json_data["group_id"])
                 nickname = getnickname(json_data["user_id"])
                 msg = nickname + "(" + userId + ")" + " 离开了 " + groupName
@@ -162,6 +165,7 @@ async def recvMsg():
                     await httpx.AsyncClient().post(url)
         if json_data["notice_type"] == "group_increase":
             if json_data["group_id"] in group_whitelist:
+                groupId = json_data["group_id"]
                 groupName = getGroupName(json_data["group_id"])
                 nickname = getnickname(json_data["user_id"])
                 msg = nickname + "(" + userId + ")" + " 加入了 " + groupName
