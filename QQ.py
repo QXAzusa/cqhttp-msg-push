@@ -56,6 +56,8 @@ def msgFormat(msg):
         msg = "[红包]"
     elif "CQ:forward" in msg:
         msg = "[合并转发]"
+    elif "CQ:video" in msg:
+        msg = "[视频]"
     elif "CQ:reply" in msg:
         cqcode = re.findall('\[CQ:reply.*?]', msg)
         replymsg = re.findall('(?<=\[CQ:reply,text=).*?(?=,qq=)', cqcode)
