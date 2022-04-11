@@ -224,6 +224,7 @@ async def recvMsg():
                 TG_ID = TG_GroupLink[str(uid)]
             else:
                 TG_ID = TG_UID
+            msg = Name + ":%0A" + msg
             msg = urllib.parse.quote(msg)
             url = 'https://' + TG_API + '/bot' + KEY + '/sendMessage?chat_id=' + TG_ID + '&text=' + msg
             await httpx.AsyncClient().post(url)
