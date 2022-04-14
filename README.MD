@@ -60,5 +60,5 @@ https://github.com/QXAzusa/tencent-push/projects/1
 
 <figure style="width: min-content">
     <img src="https://resources.jetbrains.com/storage/products/company/brand/logos/PyCharm_icon.png" width="200" height="200">
-    <figcaption>Copyright © 2021 JetBrains s.r.o. </br>ReSharper and the ReSharper logo are registered trademarks of JetBrains s.r.o.</figcaption>
+    <figcaption>Copyright © 2021 JetBrains s.r.o. </br>PyCharm and the PyCharm logo are registered trademarks of JetBrains s.r.o.</figcaption>
 </figure>
