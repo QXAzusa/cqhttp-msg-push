@@ -64,7 +64,7 @@ def msgFormat(msg):
         replyid = re.findall('(?<=\,qq=).*?(?=,time=)', cqcode)
         replymsg = ' '.join(replymsg)
         replyid = ' '.join(replyid)
-        replycard = getmembercard(replyid)
+        replycard = getnickname(replyid)
         if TG == "True":
             renew = '回复 '+ ' ' + replycard + '' + replymsg + '%0A'
             msg = msg.replace(cqcode, renew)
@@ -184,9 +184,9 @@ async def recvMsg():
                 cardurl = 'http://localhost:5700/get_group_member_info?group_id' + str(groupId) + "?user_id=" + str(uid)
                 card = json.loads(requests.get(cardurl).content)
                 if card["data"]["card"] != "":
-                    card = "@" + imf["data"]["card"] + " "
+                    card = card["data"]["card"] + " "
                 else:
-                    card = "@" + imf["data"]["nickname"] + " "
+                    card = card["data"]["nickname"] + " "
                 msg = card + '上传了 ' + filename + ' 到 ' + groupName
                 if MiPush == "True":
                     await httpx.AsyncClient().post("https://tdtt.top/send",data={'title':"QQ通知",'content':'%s'%(msg),'alias':KEY})
