@@ -113,11 +113,7 @@ def getGroupName(groupId):
     for i in range(length):
         if groupId == groupInfo["data"][i]["group_id"]:
             return groupInfo["data"][i]["group_name"]
-def getremark(uid):
-    length = len(friendInfo["data"])
-    for i in range(length):
-        if friendInfo == friendInfo["data"][i]["user_id"]:
-            return friendInfo["data"][i]["remark"]
+
 def getnickname(id):
     url = 'http://localhost:5700/get_stranger_info?user_id=' + str(id)
     jsonnickname = json.loads(requests.get(url).text)
