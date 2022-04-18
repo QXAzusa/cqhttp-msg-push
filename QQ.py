@@ -204,7 +204,7 @@ async def recvMsg():
         nickName = json_data["sender"]["nickname"]
         msg = msgFormat(json_data["message"])
         uid = json_data["sender"]["user_id"]
-        print("来自%s的私聊消息:%s"%(Name,msg))
+        print("来自%s的私聊消息:%s"%(nickName,msg))
         if MiPush == "True":
             await httpx.AsyncClient().post("https://tdtt.top/send",data={'title':Name,'content':msg,'alias':KEY})
         elif FCM == "True":
