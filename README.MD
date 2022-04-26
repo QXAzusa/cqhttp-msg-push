@@ -10,7 +10,7 @@ master分支是对原项目功能的补充和Bug修复、patch分支仅针对原
 ### 运行环境
 Python 3
 ### 运行方法
-以"git clone" 或 "Download zip"方式下载项目,在项目目录下执行`pip3 install -r requirements.txt`安装依赖。成下方配置后先打开go-cqhttp，根据提示登录QQ，待提示服务端启动成功时运行此脚本，两个程序必须同时运行。
+前往Release页面下载项目,在项目目录下执行`pip3 install -r requirements.txt`安装依赖。成下方配置后先打开go-cqhttp，根据提示登录QQ，待提示服务端启动成功时运行此脚本，两个程序必须同时运行。
 ### go-cqhttp
 第一次运行请根据提示选择“http通信”生成配置文件<br>
 在配置文件中填写好账号密码 修改结尾服务配置
