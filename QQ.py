@@ -39,7 +39,7 @@ def msgFormat(msg):
             for code in cqcode:
                 imageurl = re.findall('(?<=.image,url=).*?(?=,subType=)', code)
                 imageurl = ' '.join(imageurl)
-                renew = '[图片] ' + imageurl
+                renew = '[图片] ' + imageurl + ''
                 msg = msg.replace(code, renew)
         else:
             cqcode = re.findall('\[CQ:image.*?]', msg)
