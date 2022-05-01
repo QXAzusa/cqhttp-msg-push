@@ -39,7 +39,7 @@ def msgFormat(msg):
             for code in cqcode:
                 imageurl = re.findall('(?<=.image,url=).*?(?=,subType=)', code)
                 imageurl = ' '.join(imageurl)
-                renew = '[图片] ' + imageurl + ''
+                renew = '[图片] ' + imageurl + ' '
                 msg = msg.replace(code, renew)
         else:
             cqcode = re.findall('\[CQ:image.*?]', msg)
@@ -77,7 +77,7 @@ def msgFormat(msg):
     elif "CQ:at" in msg:
         atid = re.findall('(?<=qq=).*?(?=])', msg)
         for uid in atid:
-            atimfurl = 'http://localhost:5700/get_group_member_info?group_id' + str(groupId) + "?user_id=" + str(uid)
+            atimfurl = 'http://localhost:5700/get_group_member_info?group_id=' + str(groupId) + "?user_id=" + str(uid)
             imf = json.loads(requests.get(atimfurl).content)
             regex1 = re.compile(r'\[CQ:at,qq=' + uid + ']')
             cqcode = regex1.search(msg)
@@ -191,7 +191,7 @@ async def recvMsg():
                 filename = json_data["file"]["name"]
                 userid = json_data["user_id"]
                 name = getmembercard(userid)
-                cardurl = 'http://localhost:5700/get_group_member_info?group_id' + str(groupId) + "?user_id=" + str(uid)
+                cardurl = 'http://localhost:5700/get_group_member_info?group_id=' + str(groupId) + "?user_id=" + str(uid)
                 card = json.loads(requests.get(cardurl).content)
                 if card["data"]["card"] != "":
                     card = card["data"]["card"] + " "
