@@ -1,7 +1,7 @@
 ## 提醒
 master分支是对原项目功能的补充和Bug修复、patch分支仅针对原项目的bug修复和功能完善
 ## 声明
-此项目并未对任何版本的腾讯QQ进行任何修改或注入行为，此项目仅围绕cqhttp客户端提供的接口开发。
+此项目并未对任何版本的腾讯QQ进行任何修改或注入行为，此项目仅围绕cqhttp客户端提供的接口开发。<br>
 This project does not modify or inject any version of Tencent QQ, this project is only developed around the interface provided by the cqhttp client.
 ## 介绍
 这是一个能够对QQ消息通过第三方推送转发的程序，修改自<a href="https://github.com/zhishixiang/tencent-push">zhishixiang/tencent-push</a>项目。此版本相比原版有以下区别：  
