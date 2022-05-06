@@ -88,24 +88,9 @@ def msgFormat(msg):
                 at = "@" + imf["data"]["nickname"] + " "
             msg = msg.replace(cqcode, at)
     elif 'com.tencent.miniapp' in msg:
-        minijson = json.loads(re.findall('(?<=\[CQ:json,data=).*?(?=])', msg))
-        mini_title = minijson["prompt"]
-        if "detail_1" in msg:
-            mini_url = minijson["meta"]["detail_1"]["qqdocurl"]
-            mini_desc = minijson["meta"]["detail_1"]["desc"]
-        else:
-            mini_url = ""
-            mini_desc = ""
-        if TG == "True":
-            msg = mini_title + "\n" + mini_desc + "\n" + mini_url
-        else:
-            msg = mini_title + "\n" + mini_desc
-    elif "com.tencent.structmsg" in msg:
-        structjson = json.loads(re.findall('(?<=\[CQ:json,data=).*?(?=])', msg))
-        structtitle = structjson["prompt"]
-        msg = structtitle
-    else:
-        msg = msg
+        msg = '[小程序]'
+    elif "CQ:xml" in msg:
+        msg = '[卡片消息]'
     return msg
 
 def getGroupName(groupId):
