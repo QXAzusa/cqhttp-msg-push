@@ -7,8 +7,6 @@ This project does not modify or inject any version of Tencent QQ, this project i
 这是一个能够对QQ消息通过第三方推送转发的程序，修改自<a href="https://github.com/zhishixiang/tencent-push">zhishixiang/tencent-push</a>项目。此版本相比原版有以下区别：  
 1.补充了Telegram机器人私聊推送渠道<br>
 2.能够在Telegram中直接显示图片<br>
-！未测试，切勿依赖！3.使用TG推送时能够将小程序转换为链接<br>
-！未完善，切勿依赖！4.能对群组的系统通知进行推送（群成员变动）<br>
 ## 使用方法
 ### 运行环境
 Python 3
@@ -63,5 +61,5 @@ https://github.com/QXAzusa/tencent-push/projects/1
 
 <figure style="width: min-content">
     <img src="https://resources.jetbrains.com/storage/products/company/brand/logos/PyCharm_icon.png" width="200" height="200">
-    <figcaption>Copyright © 2021 JetBrains s.r.o. </br>PyCharm and the PyCharm logo are registered trademarks of JetBrains s.r.o.</figcaption>
+    <figcaption>Copyright © 2022 JetBrains s.r.o. </br>PyCharm and the PyCharm logo are registered trademarks of JetBrains s.r.o.</figcaption>
 </figure>

@@ -88,7 +88,10 @@ def msgFormat(msg):
                 at = "@" + imf["data"]["nickname"] + " "
             msg = msg.replace(cqcode, at)
     elif 'com.tencent.miniapp' in msg:
-        msg = '[小程序]'
+        if TG == 'True':
+            msg = msg
+        else:
+            msg = '[小程序]'
     elif "CQ:xml" in msg:
         msg = '[卡片消息]'
     return msg
