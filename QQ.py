@@ -39,7 +39,7 @@ def msgFormat(msg):
             for code in cqcode:
                 imageurl = re.findall('(?<=.image,url=).*?(?=,subType=)', code)
                 imageurl = ' '.join(imageurl)
-                renew = '[图片] ' + imageurl + ' '
+                renew = '[图片] ' + imageurl + '\n'
                 msg = msg.replace(code, renew)
         else:
             cqcode = re.findall('\[CQ:image.*?]', msg)
@@ -88,10 +88,28 @@ def msgFormat(msg):
                 at = "@" + imf["data"]["nickname"] + " "
             msg = msg.replace(cqcode, at)
     elif 'com.tencent.miniapp' in msg:
+        msgjson = re.findall('{"app":"com.tencent.miniapp.*?,"sourceAd":""}', msg)
+        msgjson = ' '.join(msgjson)
+        msgjson = json.loads(msgjson)
+        minititle = msgjson["meta"]["detail_1"]["qqdocurl"]
+        miniurl = msgjson["meta"]["detail_1"]["desc"]
+        tittle = msgjson["prompt"]
         if TG == 'True':
-            msg = msg
+            msg = tittle + '\n' + minititle + '\n ' + miniurl
         else:
-            msg = '[小程序]'
+            msg = tittle
+    elif 'com.tencent.structmsg' in msg:
+        jumpurl = re.findall('(?<="jumpUrl":").*?(?="&)',msg)
+        jumpurl = ' '.join(jumpurl)
+        jumpurl = jumpurl.replace('\\','')
+        tittle = re.findall(r'(?<="title":").*?(?="&)',msg)
+        tittle = ' '.join(tittle)
+        if TG == 'True':
+            msg = tittle + '\n' + jumpurl
+        else:
+            msg = tittle
+    elif "CQ:json" in msg:
+        msg = '[卡片消息]'
     elif "CQ:xml" in msg:
         msg = '[卡片消息]'
     return msg
