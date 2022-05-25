@@ -219,9 +219,9 @@ async def recvMsg():
         uid = json_data["sender"]["user_id"]
         print("来自%s的私聊消息:%s"%(nickName,msg))
         if MiPush == "True":
-            await httpx.AsyncClient().post("https://tdtt.top/send",data={'title':Name,'content':msg,'alias':KEY})
+            await httpx.AsyncClient().post("https://tdtt.top/send",data={'title':nickName,'content':msg,'alias':KEY})
         elif FCM == "True":
-            await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id':KEY,'title':Name,'message':msg,'type':'privateMsg'})
+            await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id':KEY,'title':nickName,'message':msg,'type':'privateMsg'})
         elif TG == "True":
             if str(uid) in TG_GroupLink:
                 TG_ID = TG_GroupLink[str(uid)]
