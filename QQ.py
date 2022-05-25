@@ -82,11 +82,8 @@ def msgFormat(msg):
             regex1 = re.compile(r'\[CQ:at,qq=' + uid + ']')
             cqcode = regex1.search(msg)
             cqcode = (cqcode.group())
-            if imf["data"]["card"] != "":
-                at = "@" + imf["data"]["card"] + " "
-            else:
-                at = "@" + imf["data"]["nickname"] + " "
-            msg = msg.replace(cqcode, at)
+            print(imf)
+            msg = msg
     elif 'com.tencent.miniapp' in msg:
         msgjson = re.findall('{"app":"com.tencent.miniapp.*?,"sourceAd":""}', msg)
         msgjson = ' '.join(msgjson)
