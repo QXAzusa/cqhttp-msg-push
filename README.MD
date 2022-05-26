@@ -37,7 +37,7 @@ servers:
       #  secret: ''          # 密钥
 ```
 ### MiPush
-下载安装“<a href="https://raw.githubusercontent.com/QXAzusa/tencent-push/master/top.tdtt.news.apk">消息接收</a>”，显示注册成功后，点击设置别名，尽量设置复杂一点。设置完后记得设置的别名。
+下载安装“<a href="https://github.com/QXAzusa/tencent-push/raw/master/package/top.tdtt.news.apk">消息接收</a>”，显示注册成功后，点击设置别名，尽量设置复杂一点。设置完后记得设置的别名。
 ### FCM
 前往Google Play搜索安装“<a href="https://play.google.com/store/apps/details?id=com.mrivan.wirepusher">WirePusher</a>”，安装好后打开，记录ID
 ### Telegram Bot
