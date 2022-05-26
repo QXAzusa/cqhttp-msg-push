@@ -53,8 +53,6 @@ servers:
 |  TG_UID   |                             需要接收消息的TG用户ID                             |          |  TG推送必填  |
 |  TG_API   |                             TG推送时所用API的域名                             |         | 可选，不填为默认 |
 |     TG_GroupLink      |        Telegram群组消息绑定关系<br/>格式为：{"群号":"TG群组ID","群号":"TG群组ID"}         |            |     可选     |
-## 开发计划
-https://github.com/QXAzusa/tencent-push/projects/1
 ## JetBrains开源许可
 本项目重度依赖于JetBrains™ PyCharm，感谢JetBrains s.r.o为本项目提供[开源许可证](https://www.jetbrains.com/community/opensource/#support)，如果你同样对开发充满热情并且经常使用JetBrains s.r.o的产品，你也可以尝试通过JetBrains官方渠道[申请](https://www.jetbrains.com/shop/eform/opensource)开源许可证以供核心开发者使用
 
