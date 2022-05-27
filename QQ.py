@@ -57,6 +57,11 @@ def msgFormat(msg):
     elif "CQ:forward" in msg:
         msg = "[合并转发]"
     elif "CQ:video" in msg:
+        if TG == "True":
+            videourl = re.findall('(?<=.url=).*?(?=,])', code)
+            videourl = ' '.join(videourl)
+            renew = '[视频] ' + videourl
+            msg = msg.replace(code, renew)
         msg = "[视频]"
     elif "CQ:reply" in msg:
         cqcode = re.findall('\[CQ:reply.*?]', msg)
