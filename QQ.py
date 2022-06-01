@@ -80,7 +80,7 @@ def msgFormat(msg):
     elif "戳一戳" in msg:
         msg = "戳了你一下"
     elif "CQ:at" in msg:
-        atid = re.findall('(?<=qq=).*?(?=])', msg)
+        '''atid = re.findall('(?<=qq=).*?(?=])', msg)
         for uid in atid:
             atimfurl = 'http://localhost:5700/get_group_member_info?group_id=' + str(groupId) + "?user_id=" + str(uid)
             imf = json.loads(requests.get(atimfurl).content)
@@ -88,18 +88,24 @@ def msgFormat(msg):
             cqcode = regex1.search(msg)
             cqcode = (cqcode.group())
             print(imf)
-            msg = msg
+            msg = msg'''
+        msg = msg
     elif 'com.tencent.miniapp' in msg:
         msgjson = re.findall('{"app":"com.tencent.miniapp.*?,"sourceAd":""}', msg)
         msgjson = ' '.join(msgjson)
         msgjson = json.loads(msgjson)
-        minititle = msgjson["meta"]["detail_1"]["qqdocurl"]
+        '''minititle = msgjson["meta"]["detail_1"]["qqdocurl"]
         miniurl = msgjson["meta"]["detail_1"]["desc"]
         tittle = msgjson["prompt"]
         if TG == 'True':
             msg = tittle + '\n' + minititle + '\n ' + miniurl
         else:
-            msg = tittle
+            msg = tittle'''
+        str = json.dumps(msgjson, indent=2)
+        if TG == 'True':
+            msg = str
+        else:
+            msg = '[小程序]'
     elif 'com.tencent.structmsg' in msg:
         jumpurl = re.findall('(?<="jumpUrl":").*?(?="&)',msg)
         jumpurl = ' '.join(jumpurl)
@@ -173,7 +179,7 @@ async def recvMsg():
                     else:
                         url = f"https://api.telegram.org/bot{KEY}/sendMessage"
                     await httpx.AsyncClient().post(url=url, data=senddata)
-        if json_data["notice_type"] == "group_increase":
+        elif json_data["notice_type"] == "group_increase":
             if json_data["group_id"] in group_whitelist:
                 groupId = json_data["group_id"]
                 groupName = getGroupName(json_data["group_id"])
@@ -192,7 +198,7 @@ async def recvMsg():
                     else:
                         url = f"https://api.telegram.org/bot{KEY}/sendMessage"
                     await httpx.AsyncClient().post(url=url, data=senddata)
-        if json_data["notice_type"] == "group_upload":
+        elif json_data["notice_type"] == "group_upload":
             if json_data["group_id"] in group_whitelist:
                 groupId = json_data["group_id"]
                 groupName = getGroupName(groupId)
