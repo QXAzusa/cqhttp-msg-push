@@ -80,16 +80,18 @@ def msgFormat(msg):
     elif "戳一戳" in msg:
         msg = "戳了你一下"
     elif "CQ:at" in msg:
-        '''atid = re.findall('(?<=qq=).*?(?=])', msg)
+        atid = re.findall('(?<=qq=).*?(?=])', msg)
         for uid in atid:
-            atimfurl = 'http://localhost:5700/get_group_member_info?group_id=' + str(groupId) + "?user_id=" + str(uid)
+            atimfurl = 'http://localhost:5700/get_group_member_info?group_id=' + str(groupId) + "&user_id=" + str(uid)
             imf = json.loads(requests.get(atimfurl).content)
             regex1 = re.compile(r'\[CQ:at,qq=' + uid + ']')
             cqcode = regex1.search(msg)
             cqcode = (cqcode.group())
-            print(imf)
-            msg = msg'''
-        msg = msg
+            if imf["data"]["card"] != "":
+                at = " @" + imf["data"]["card"] + " "
+            else:
+                at = " @" + imf["data"]["nickname"] + " "
+            msg = msg.replace(cqcode, at)
     elif 'com.tencent.miniapp' in msg:
         msgjson = re.findall('{"app":"com.tencent.miniapp.*?,"sourceAd":""}', msg)
         msgjson = ' '.join(msgjson)
