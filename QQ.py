@@ -204,7 +204,7 @@ async def recvMsg():
                 groupName = getGroupName(groupId)
                 filename = json_data["file"]["name"]
                 userid = json_data["user_id"]
-                cardurl = 'http://localhost:5700/get_group_member_info?group_id=' + str(groupId) + "?user_id=" + str(uid)
+                cardurl = 'http://localhost:5700/get_group_member_info?group_id=' + str(groupId) + "&user_id=" + str(userid)
                 card = json.loads(requests.get(cardurl).content)
                 if card["data"]["card"] != "":
                     card = card["data"]["card"] + " "
