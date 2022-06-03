@@ -103,9 +103,9 @@ def msgFormat(msg):
             msg = tittle + '\n' + minititle + '\n ' + miniurl
         else:
             msg = tittle'''
-        str = json.dumps(msgjson, indent=2)
+        msg = json.dumps(msgjson, indent=2)
         if TG == 'True':
-            msg = str
+            msg = msg
         else:
             msg = '[小程序]'
     elif 'com.tencent.structmsg' in msg:
