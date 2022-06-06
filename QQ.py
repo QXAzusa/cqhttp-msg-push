@@ -93,21 +93,22 @@ def msgFormat(msg):
                 at = " @" + imf["data"]["nickname"] + " "
             msg = msg.replace(cqcode, at)
     elif 'com.tencent.miniapp' in msg:
-        msgjson = re.findall('{"app":"com.tencent.miniapp.*?,"sourceAd":""}', msg)
-        msgjson = ' '.join(msgjson)
-        msgjson = json.loads(msgjson)
-        '''minititle = msgjson["meta"]["detail_1"]["qqdocurl"]
-        miniurl = msgjson["meta"]["detail_1"]["desc"]
-        tittle = msgjson["prompt"]
-        if TG == 'True':
-            msg = tittle + '\n' + minititle + '\n ' + miniurl
+        '''小程序跳转链接'''
+        mini_jumpurl = re.findall('(?<="qqdocurl":").*?(?=")', msg)
+        mini_jumpurl = ' '.join(mini_jumpurl)
+        mini_jumpurl = jumpurl.replace('\\', '')
+        '''小程序标题'''
+        mini_imf = re.findall('{"appType":.*?}', msg)
+        mini_imf = ' '.join(mini_imf)
+        mini_tittle = re.findall('(?<="desc":").*?(?=")', imf)
+        mini_tittle = ' '.join(mini_tittle)
+        '''小程序归属'''
+        mini_from = re.findall('(?<="title":").*?(?=")', msg)
+        mini_from = ' '.join(mini_from)
+        if TG == "True":
+            msg = '[小程序] ' + mini_from + '\n' + mini_tittle + '\n' + mini_jumpurl
         else:
-            msg = tittle'''
-        msg = json.dumps(msgjson, indent=2)
-        if TG == 'True':
-            msg = msg
-        else:
-            msg = '[小程序]'
+            msg = '[小程序] ' + mini_from + '\n' + mini_tittle
     elif 'com.tencent.structmsg' in msg:
         jumpurl = re.findall('(?<="jumpUrl":").*?(?="&)',msg)
         jumpurl = ' '.join(jumpurl)
