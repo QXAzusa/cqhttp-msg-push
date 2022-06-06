@@ -1,5 +1,4 @@
-## 提醒
-master分支是对原项目功能的补充和Bug修复、patch分支仅针对原项目的bug修复和功能完善
+# tencent-push
 ## 声明
 此项目并未对任何版本的腾讯QQ进行任何修改或注入行为，此项目仅围绕go-cqhttp客户端提供的接口开发。<br>
 This project does not modify or inject any version of Tencent QQ, this project is only developed around the interface provided by the go-cqhttp client.
