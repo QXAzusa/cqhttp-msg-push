@@ -138,12 +138,18 @@ def getnickname(id):
 
 def getfriendmark(UID):
     length = len(groupInfo["data"])
-    for i in range(length):
-        if UID == friendInfo["data"][i]["user_id"]:
-            if friendInfo["data"]["remark"] != "":
-                nickname = friendInfo["data"]["remark"]
-            else:
-                nickname = friendInfo["data"]["nickname"]
+    try:
+        for i in range(length):
+            if UID == friendInfo["data"][i]["user_id"]:
+                if friendInfo["data"]["remark"] != "":
+                    nickname = friendInfo["data"]["remark"]
+                else:
+                    nickname = friendInfo["data"]["nickname"]
+    except:
+        try:
+            nickname = getnickname(UID)
+        except:
+            nickname = "未知"
     return nickname
 
 @app.route("/",methods=['POST'])
@@ -238,9 +244,9 @@ async def recvMsg():
                         url = f"https://api.telegram.org/bot{KEY}/sendMessage"
                     await httpx.AsyncClient().post(url=url, data=senddata)
     elif json_data["message_type"] == "private":
-        nickName = json_data["sender"]["nickname"]
         msg = msgFormat(json_data["message"])
         uid = json_data["sender"]["user_id"]
+        nickname = getfriendmark(uid)
         print("来自%s的私聊消息:%s"%(nickName,msg))
         if MiPush == "True":
             await httpx.AsyncClient().post("https://tdtt.top/send",data={'title':nickName,'content':msg,'alias':KEY})
