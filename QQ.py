@@ -136,6 +136,16 @@ def getnickname(id):
     jsonnickname = json.loads(requests.get(url).text)
     return jsonnickname["data"]["nickname"]
 
+def getfriendmark(UID):
+    length = len(groupInfo["data"])
+    for i in range(length):
+        if UID == friendInfo["data"][i]["user_id"]:
+            if friendInfo["data"]["remark"] != "":
+                nickname = friendInfo["data"]["remark"]
+            else:
+                nickname = friendInfo["data"]["nickname"]
+    return nickname
+
 @app.route("/",methods=['POST'])
 async def recvMsg():
     global TG_API,TG_ID,groupId
