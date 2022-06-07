@@ -62,7 +62,8 @@ def msgFormat(msg):
             videourl = ' '.join(videourl)
             renew = '[视频] ' + videourl
             msg = msg.replace(code, renew)
-        msg = "[视频]"
+        else:
+            msg = "[视频]"
     elif "CQ:reply" in msg:
         cqcode = re.findall('\[CQ:reply.*?]', msg)
         replymsg = re.findall('(?<=\[CQ:reply,text=).*?(?=,qq=)', cqcode)
