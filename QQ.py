@@ -153,6 +153,23 @@ def getfriendmark(UID):
             nickname = "未知"
     return nickname
 
+async def sendmsg(msg):
+    if MiPush == "True":
+        await httpx.AsyncClient().post("https://tdtt.top/send",data={'title':QQ消息,'content':msg,'alias':KEY})
+    elif FCM == "True":
+        await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id':KEY,'title':QQ消息,'message':msg,'type':'privateMsg'})
+    elif TG == "True":
+        if str(uid) in TG_GroupLink:
+            TG_ID = TG_GroupLink[str(uid)]
+        else:
+            TG_ID = TG_UID
+        senddata = {"chat_id": TG_ID, "text": msg, "disable_web_page_preview": "true"}
+        if TG_API != "":
+            url = f"https://{TG_API}/bot{KEY}/sendMessage"
+        else:
+            url = f"https://api.telegram.org/bot{KEY}/sendMessage"
+        await httpx.AsyncClient().post(url=url, data=senddata)
+
 @app.route("/",methods=['POST'])
 async def recvMsg():
     global TG_API,TG_ID,groupId
