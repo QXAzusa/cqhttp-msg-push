@@ -137,7 +137,7 @@ def getnickname(id):
     return jsonnickname["data"]["nickname"]
 
 def getfriendmark(UID):
-    length = len(groupInfo["data"])
+    length = len(friendInfo["data"])
     try:
         for i in range(length):
             if UID == friendInfo["data"][i]["user_id"]:
