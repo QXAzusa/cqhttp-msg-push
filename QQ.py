@@ -58,10 +58,10 @@ def msgFormat(msg):
         msg = "[合并转发]"
     elif "CQ:video" in msg:
         if TG == "True":
-            videourl = re.findall('(?<=.url=).*?(?=,])', code)
+            videourl = re.findall('(?<=.url=).*?(?=,])', msg)
             videourl = ' '.join(videourl)
             renew = '[视频] ' + videourl
-            msg = msg.replace(code, renew)
+            msg = msg.replace(msg, renew)
         else:
             msg = "[视频]"
     elif "CQ:reply" in msg:
@@ -97,11 +97,11 @@ def msgFormat(msg):
         '''小程序跳转链接'''
         mini_jumpurl = re.findall('(?<="qqdocurl":").*?(?=")', msg)
         mini_jumpurl = ' '.join(mini_jumpurl)
-        mini_jumpurl = jumpurl.replace('\\', '')
+        mini_jumpurl = mini_jumpurl.replace('\\', '')
         '''小程序标题'''
         mini_imf = re.findall('{"appType":.*?}', msg)
         mini_imf = ' '.join(mini_imf)
-        mini_tittle = re.findall('(?<="desc":").*?(?=")', imf)
+        mini_tittle = re.findall('(?<="desc":").*?(?=")', mini_imf)
         mini_tittle = ' '.join(mini_tittle)
         '''小程序归属'''
         mini_from = re.findall('(?<="title":").*?(?=")', msg)
