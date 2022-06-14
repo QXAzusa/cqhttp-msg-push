@@ -197,7 +197,7 @@ async def recvMsg():
                     url = f"https://api.telegram.org/bot{KEY}/sendMessage"
                 await httpx.AsyncClient().post(url=url, data=senddata)
     elif json_data["post_type"] == "notice":
-        if json_data["notice_type"] == "group_decrease":
+        '''if json_data["notice_type"] == "group_decrease":
             if json_data["group_id"] in group_whitelist:
                 groupId = json_data["group_id"]
                 groupName = getGroupName(json_data["group_id"])
@@ -234,8 +234,8 @@ async def recvMsg():
                         url = f"https://{TG_API}/bot{KEY}/sendMessage"
                     else:
                         url = f"https://api.telegram.org/bot{KEY}/sendMessage"
-                    await httpx.AsyncClient().post(url=url, data=senddata)
-        elif json_data["notice_type"] == "group_upload":
+                    await httpx.AsyncClient().post(url=url, data=senddata)'''
+        if json_data["notice_type"] == "group_upload":
             if json_data["group_id"] in group_whitelist:
                 groupId = json_data["group_id"]
                 groupName = getGroupName(groupId)
@@ -265,17 +265,17 @@ async def recvMsg():
         msg = msgFormat(json_data["message"])
         uid = json_data["sender"]["user_id"]
         nickname = getfriendmark(uid)
-        print("来自%s的私聊消息:%s"%(nickName,msg))
+        print("来自%s的私聊消息:%s"%(nickname,msg))
         if MiPush == "True":
-            await httpx.AsyncClient().post("https://tdtt.top/send",data={'title':nickName,'content':msg,'alias':KEY})
+            await httpx.AsyncClient().post("https://tdtt.top/send",data={'title':nickname,'content':msg,'alias':KEY})
         elif FCM == "True":
-            await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id':KEY,'title':nickName,'message':msg,'type':'privateMsg'})
+            await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id':KEY,'title':nickname,'message':msg,'type':'privateMsg'})
         elif TG == "True":
             if str(uid) in TG_GroupLink:
                 TG_ID = TG_GroupLink[str(uid)]
             else:
                 TG_ID = TG_UID
-            msg = nickName + ":\n" + msg
+            msg = nickname + ":\n" + msg
             senddata = {"chat_id": TG_ID, "text": msg, "disable_web_page_preview": "false"}
             if TG_API != "":
                 url = f"https://{TG_API}/bot{KEY}/sendMessage"
