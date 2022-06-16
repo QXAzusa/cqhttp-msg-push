@@ -64,20 +64,6 @@ def msgFormat(msg):
             msg = msg.replace(msg, renew)
         else:
             msg = "[视频]"
-    elif "CQ:reply" in msg:
-        cqcode = re.findall('\[CQ:reply.*?]', msg)
-        replymsg = re.findall('(?<=\[CQ:reply,text=).*?(?=,qq=)', cqcode)
-        replyid = re.findall('(?<=\,qq=).*?(?=,time=)', cqcode)
-        replymsg = ' '.join(replymsg)
-        replyid = ' '.join(replyid)
-        replycard = getnickname(replyid)
-        if TG == "True":
-            renew = '回复 '+ ' ' + replycard + '' + replymsg + '\n'
-            msg = msg.replace(cqcode, renew)
-        else:
-            renew = '回复 ' + ' ' + replycard + '\n'
-            msg = msg.replace(code, renew)
-        msg = msg
     elif "戳一戳" in msg:
         msg = "戳了你一下"
     elif "CQ:at" in msg:
