@@ -67,18 +67,24 @@ def msgFormat(msg):
     elif "戳一戳" in msg:
         msg = "戳了你一下"
     elif "CQ:at" in msg:
-        atid = re.findall('(?<=qq=).*?(?=])', msg)
-        for uid in atid:
-            atimfurl = 'http://localhost:5700/get_group_member_info?group_id=' + str(groupId) + "&user_id=" + str(uid)
-            imf = json.loads(requests.get(atimfurl).content)
-            regex1 = re.compile(r'\[CQ:at,qq=' + uid + ']')
+        if "all" in msg:
+            regex1 = re.compile(r'\[CQ:at,qq=all]')
             cqcode = regex1.search(msg)
             cqcode = (cqcode.group())
-            if imf["data"]["card"] != "":
-                at = " @" + imf["data"]["card"] + " "
-            else:
-                at = " @" + imf["data"]["nickname"] + " "
-            msg = msg.replace(cqcode, at)
+            msg = msg.replace(cqcode, " @全体成员 ")
+        else:
+            atid = re.findall('(?<=qq=).*?(?=])', msg)
+            for uid in atid:
+                atimfurl = 'http://localhost:5700/get_group_member_info?group_id=' + str(groupId) + "&user_id=" + str(uid)
+                imf = json.loads(requests.get(atimfurl).content)
+                regex1 = re.compile(r'\[CQ:at,qq=' + uid + ']')
+                cqcode = regex1.search(msg)
+                cqcode = (cqcode.group())
+                if imf["data"]["card"] != "":
+                    at = " @" + imf["data"]["card"] + " "
+                else:
+                    at = " @" + imf["data"]["nickname"] + " "
+                msg = msg.replace(cqcode, at)
     elif 'com.tencent.miniapp' in msg:
         '''小程序跳转链接'''
         mini_jumpurl = re.findall('(?<="qqdocurl":").*?(?=")', msg)
