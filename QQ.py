@@ -182,7 +182,7 @@ async def recvMsg():
                 await httpx.AsyncClient().post("https://wirepusher.com/send", data={'id': KEY, 'title': "新的好友添加请求",'message': '%s想要添加您为好友' % friendId,'type': 'FriendAdd'})
             elif TG == "True":
                 msg = friendId + ' 请求添加您为好友'
-                senddata = {"chat_id": TG_ID, "text": msg, "disable_web_page_preview": "false"}
+                senddata = {"chat_id": TG_ID, "text": msg, "disable_web_page_preview": "true"}
                 if TG_API != "":
                     url = f"https://{TG_API}/bot{KEY}/sendMessage"
                 else:
@@ -247,7 +247,7 @@ async def recvMsg():
                 if TG == "True":
                     if str(groupId) in TG_GroupLink:
                         TG_ID = TG_GroupLink[str(groupId)]
-                    senddata = {"chat_id": TG_ID, "text": msg, "disable_web_page_preview": "false"}
+                    senddata = {"chat_id": TG_ID, "text": msg, "disable_web_page_preview": "true"}
                     if TG_API != "":
                         url = f"https://{TG_API}/bot{KEY}/sendMessage"
                     else:
@@ -268,7 +268,7 @@ async def recvMsg():
             else:
                 TG_ID = TG_UID
             msg = nickname + ":\n" + msg
-            senddata = {"chat_id": TG_ID, "text": msg, "disable_web_page_preview": "false"}
+            senddata = {"chat_id": TG_ID, "text": msg, "disable_web_page_preview": "true"}
             if TG_API != "":
                 url = f"https://{TG_API}/bot{KEY}/sendMessage"
             else:
@@ -298,7 +298,7 @@ async def recvMsg():
                     text = card + "[" + groupName + "]" + ":\n" + msg
                 else:
                     text = nickName + "[" + groupName + "]" + ":\n" + msg
-                senddata = {"chat_id": TG_ID, "text": text, "disable_web_page_preview": "false"}
+                senddata = {"chat_id": TG_ID, "text": text, "disable_web_page_preview": "true"}
                 if TG_API != "":
                    url = f"https://{TG_API}/bot{KEY}/sendMessage"
                 else:
@@ -326,7 +326,7 @@ async def recvMsg():
                     msg = card + "[" + groupName + "]" + ":\n" + msg
                 else:
                     msg = nickName + "[" + groupName + "]" + ":\n" + msg
-                senddata = {"chat_id": TG_ID, "text": msg, "disable_web_page_preview": "false"}
+                senddata = {"chat_id": TG_ID, "text": msg, "disable_web_page_preview": "true"}
                 if TG_API != "":
                     url = f"https://{TG_API}/bot{KEY}/sendMessage"
                 else:
