@@ -147,14 +147,11 @@ def getfriendmark(UID):
 
 async def sendmsg(msg):
     if MiPush == "True":
-        await httpx.AsyncClient().post("https://tdtt.top/send",data={'title':QQ消息,'content':msg,'alias':KEY})
+        await httpx.AsyncClient().post("https://tdtt.top/send",data={'title':"QQ消息",'content':msg,'alias':KEY})
     elif FCM == "True":
-        await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id':KEY,'title':QQ消息,'message':msg,'type':'privateMsg'})
+        await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id':KEY,'title':"QQ消息",'message':msg,'type':'privateMsg'})
     elif TG == "True":
-        if str(uid) in TG_GroupLink:
-            TG_ID = TG_GroupLink[str(uid)]
-        else:
-            TG_ID = TG_UID
+        TG_ID = TG_UID
         senddata = {"chat_id": TG_ID, "text": msg, "disable_web_page_preview": "true"}
         if TG_API != "":
             url = f"https://{TG_API}/bot{KEY}/sendMessage"
@@ -189,44 +186,6 @@ async def recvMsg():
                     url = f"https://api.telegram.org/bot{KEY}/sendMessage"
                 await httpx.AsyncClient().post(url=url, data=senddata)
     elif json_data["post_type"] == "notice":
-        '''if json_data["notice_type"] == "group_decrease":
-            if json_data["group_id"] in group_whitelist:
-                groupId = json_data["group_id"]
-                groupName = getGroupName(json_data["group_id"])
-                nickname = getnickname(json_data["user_id"])
-                msg = nickname + "(" + userId + ")" + " 离开了 " + groupName
-                if MiPush == "True":
-                    await httpx.AsyncClient().post("https://tdtt.top/send",data={'title':"QQ通知",'content':'%s'%(msg),'alias':KEY})
-                if FCM == "True":
-                    await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id':KEY,'title':"QQ通知",'message':msg,'type':'privateMsg'})
-                if TG == "True":
-                    if str(groupId) in TG_GroupLink:
-                        TG_ID = TG_GroupLink[str(groupId)]
-                    senddata = {"chat_id": TG_ID, "text": msg, "disable_web_page_preview": "false"}
-                    if TG_API != "":
-                        url = f"https://{TG_API}/bot{KEY}/sendMessage"
-                    else:
-                        url = f"https://api.telegram.org/bot{KEY}/sendMessage"
-                    await httpx.AsyncClient().post(url=url, data=senddata)
-        elif json_data["notice_type"] == "group_increase":
-            if json_data["group_id"] in group_whitelist:
-                groupId = json_data["group_id"]
-                groupName = getGroupName(json_data["group_id"])
-                nickname = getnickname(json_data["user_id"])
-                msg = nickname + "(" + userId + ")" + " 加入了 " + groupName
-                if MiPush == "True":
-                    await httpx.AsyncClient().post("https://tdtt.top/send",data={'title':"QQ通知",'content':'%s'%(msg),'alias':KEY})
-                if FCM == "True":
-                    await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id':KEY,'title':"QQ通知",'message':msg,'type':'privateMsg'})
-                if TG == "True":
-                    if str(groupId) in TG_GroupLink:
-                        TG_ID = TG_GroupLink[str(groupId)]
-                    senddata = {"chat_id": TG_ID, "text": msg, "disable_web_page_preview": "false"}
-                    if TG_API != "":
-                        url = f"https://{TG_API}/bot{KEY}/sendMessage"
-                    else:
-                        url = f"https://api.telegram.org/bot{KEY}/sendMessage"
-                    await httpx.AsyncClient().post(url=url, data=senddata)'''
         if json_data["notice_type"] == "group_upload":
             if json_data["group_id"] in group_whitelist:
                 groupId = json_data["group_id"]
