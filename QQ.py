@@ -6,6 +6,7 @@ import requests
 import httpx
 import urllib.parse
 import re
+import time
 
 try:
     with open("config.json","r",encoding = 'UTF-8') as f:
@@ -45,18 +46,7 @@ def msgFormat(msg):
             cqcode = re.findall('\[CQ:image.*?]', msg)
             for code in cqcode:
                 msg = msg.replace(code, '[图片]')
-        msg = msg
-    elif "CQ:record" in msg:
-        msg = "[语音]"
-    elif "CQ:share" in msg:
-        msg = "[链接]"
-    elif "CQ:music" in msg:
-        msg = "[音乐分享]"
-    elif "CQ:redbag" in msg:
-        msg = "[红包]"
-    elif "CQ:forward" in msg:
-        msg = "[合并转发]"
-    elif "CQ:video" in msg:
+    if "CQ:video" in msg:
         if TG == "True":
             videourl = re.findall('(?<=.url=).*?(?=,])', msg)
             videourl = ' '.join(videourl)
@@ -64,9 +54,14 @@ def msgFormat(msg):
             msg = msg.replace(msg, renew)
         else:
             msg = "[视频]"
-    elif "戳一戳" in msg:
-        msg = "戳了你一下"
-    elif "CQ:at" in msg:
+    if "CQ:reply" in msg:
+        cqcode = re.findall('\[CQ:reply.*?]', msg)
+        cqcode = ' '.join(cqcode)
+        replymsg_id = re.findall('(?<=.id=).*?(?=])', cqcode)
+        replymsg_id = ' '.join(replymsg_id)
+        reply_format = replymsg(replymsg_id)
+        msg = msg.replace(cqcode, reply_format)
+    if "CQ:at" in msg:
         if "all" in msg:
             regex1 = re.compile(r'\[CQ:at,qq=all]')
             cqcode = regex1.search(msg)
@@ -85,7 +80,7 @@ def msgFormat(msg):
                 else:
                     at = " @" + imf["data"]["nickname"] + " "
                 msg = msg.replace(cqcode, at)
-    elif 'com.tencent.miniapp' in msg:
+    if 'com.tencent.miniapp' in msg:
         '''小程序跳转链接'''
         mini_jumpurl = re.findall('(?<="qqdocurl":").*?(?=")', msg)
         mini_jumpurl = ' '.join(mini_jumpurl)
@@ -102,7 +97,7 @@ def msgFormat(msg):
             msg = '[小程序] ' + mini_from + '\n' + mini_tittle + '\n' + mini_jumpurl
         else:
             msg = '[小程序] ' + mini_from + '\n' + mini_tittle
-    elif 'com.tencent.structmsg' in msg:
+    if 'com.tencent.structmsg' in msg:
         jumpurl = re.findall('(?<="jumpUrl":").*?(?="&)',msg)
         jumpurl = ' '.join(jumpurl)
         jumpurl = jumpurl.replace('\\','')
@@ -112,10 +107,22 @@ def msgFormat(msg):
             msg = tittle + '\n' + jumpurl
         else:
             msg = tittle
-    elif "CQ:json" in msg:
+    if "CQ:record" in msg:
+        msg = "[语音]"
+    if "CQ:share" in msg:
+        msg = "[链接]"
+    if "CQ:music" in msg:
+        msg = "[音乐分享]"
+    if "CQ:redbag" in msg:
+        msg = "[红包]"
+    if "CQ:forward" in msg:
+        msg = "[合并转发]"
+    if "CQ:json" in msg:
         msg = '[卡片消息]'
-    elif "CQ:xml" in msg:
+    if "CQ:xml" in msg:
         msg = '[卡片消息]'
+    if "戳一戳" in msg:
+        msg = "戳了你一下"
     return msg
 
 def getGroupName(groupId):
@@ -128,6 +135,11 @@ def getnickname(id):
     url = 'http://localhost:5700/get_stranger_info?user_id=' + str(id)
     jsonnickname = json.loads(requests.get(url).text)
     return jsonnickname["data"]["nickname"]
+
+def styletime(now):
+    timeArray = time.localtime(now/1000)
+    otherStyleTime = time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
+    return otherStyleTime
 
 def getfriendmark(UID):
     length = len(friendInfo["data"])
@@ -144,6 +156,19 @@ def getfriendmark(UID):
         except:
             nickname = "未知"
     return nickname
+
+def replymsg(msgid):
+    replymsg_api= f'http://localhost:5700/get_msg?message_id={msgid}'
+    replymsg_json = json.loads(requests.get(replymsg_api).text)
+    replymsg = replymsg_json["data"]["message"]
+    replymsg_sender = replymsg_json["data"]["sender"]["nickname"]
+    replymsg_timestamp = replymsg_json["data"]["time"]
+    replymsg_styletime = styletime(replymsg_timestamp)
+    if TG == "True":
+        replymsg = "__回复：" + replymsg_sender + "(" + replymsg_styletime + "): " + replymsg + "__\n"
+    else:
+        replymsg = f"回复 {replymsg_sender}的消息: "
+    return replymsg
 
 async def sendmsg(msg):
     if MiPush == "True":
