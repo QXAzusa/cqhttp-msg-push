@@ -36,15 +36,15 @@ app = Flask(__name__)
 def msgFormat(msg):
     if "CQ:image" in msg:
         if TG == "True":
-            cqcode = re.findall('\[CQ:image.*?]', msg)
-            for code in cqcode:
+            img_cqcode = re.findall('\[CQ:image.*?]', msg)
+            for code in img_cqcode:
                 imageurl = re.findall('(?<=,url=).*?(?=\?term=)', code)
                 imageurl = ' '.join(imageurl)
                 renew = '[图片] ' + imageurl + '\n'
                 msg = msg.replace(code, renew)
         else:
-            cqcode = re.findall('\[CQ:image.*?]', msg)
-            for code in cqcode:
+            img_cqcode = re.findall('\[CQ:image.*?]', msg)
+            for code in img_cqcode:
                 msg = msg.replace(code, '[图片]')
     if "CQ:video" in msg:
         if TG == "True":
@@ -55,31 +55,31 @@ def msgFormat(msg):
         else:
             msg = "[视频]"
     if "CQ:reply" in msg:
-        cqcode = re.findall('\[CQ:reply.*?]', msg)
-        cqcode = ' '.join(cqcode)
-        replymsg_id = re.findall('(?<=.id=).*?(?=])', cqcode)
+        reply_cqcode = re.findall('\[CQ:reply.*?]', msg)
+        reply_cqcode = ' '.join(reply_cqcode)
+        replymsg_id = re.findall('(?<=.id=).*?(?=])', reply_cqcode)
         replymsg_id = ' '.join(replymsg_id)
         reply_format = replymsg(replymsg_id)
         msg = msg.replace(cqcode, reply_format)
     if "CQ:at" in msg:
         if "all" in msg:
             regex1 = re.compile(r'\[CQ:at,qq=all]')
-            cqcode = regex1.search(msg)
-            cqcode = (cqcode.group())
-            msg = msg.replace(cqcode, " @全体成员 ")
+            at_cqcode = regex1.search(msg)
+            for code in at_cqcode:
+                msg = msg.replace(code, ' @全体成员 ')
         else:
-            atid = re.findall('(?<=qq=).*?(?=])', msg)
-            for uid in atid:
-                atimfurl = 'http://localhost:5700/get_group_member_info?group_id=' + str(groupId) + "&user_id=" + str(uid)
-                imf = json.loads(requests.get(atimfurl).content)
-                regex1 = re.compile(r'\[CQ:at,qq=' + uid + ']')
-                cqcode = regex1.search(msg)
-                cqcode = (cqcode.group())
-                if imf["data"]["card"] != "":
-                    at = " @" + imf["data"]["card"] + " "
+            at_id = re.findall('(?<=qq=).*?(?=])', msg)
+            for uid in at_id:
+                at_info_api = 'http://localhost:5700/get_group_member_info?group_id=' + str(groupId) + "&user_id=" + str(uid)
+                at_info = json.loads(requests.get(at_info_api).content)
+                if at_info["data"]["card"] != "":
+                    at_name = " @" + at_info["data"]["card"] + " "
                 else:
-                    at = " @" + imf["data"]["nickname"] + " "
-                msg = msg.replace(cqcode, at)
+                    at_name = " @" + at_info["data"]["nickname"] + " "
+                regex1 = r'\[CQ:at,qq=' + str(uid) + ']'
+                at_cqcode = re.findall(regex1, msg)
+                for at_cqcode in at_cqcode:
+                    msg = msg.replace(at_cqcode, at_name)
     if 'com.tencent.miniapp' in msg:
         '''小程序跳转链接'''
         mini_jumpurl = re.findall('(?<="qqdocurl":").*?(?=")', msg)
