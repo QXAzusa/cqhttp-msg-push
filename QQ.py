@@ -60,7 +60,7 @@ def msgFormat(msg):
         replymsg_id = re.findall('(?<=.id=).*?(?=])', reply_cqcode)
         replymsg_id = ' '.join(replymsg_id)
         reply_format = replymsg(replymsg_id)
-        msg = msg.replace(cqcode, reply_format)
+        msg = msg.replace(reply_cqcode, reply_format)
     if "CQ:at" in msg:
         if "all" in msg:
             at_cqcode = re.findall('\[CQ:at,qq=all]', msg)
