@@ -136,7 +136,7 @@ def getnickname(id):
     return jsonnickname["data"]["nickname"]
 
 def styletime(now):
-    timeArray = time.localtime(now/1000)
+    timeArray = time.localtime(now)
     otherStyleTime = time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
     return otherStyleTime
 
