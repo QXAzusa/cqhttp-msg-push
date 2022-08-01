@@ -3,10 +3,10 @@
 此项目并未对任何版本的腾讯QQ进行任何修改或注入行为，此项目仅围绕go-cqhttp客户端提供的接口开发。<br>
 This project does not modify or inject any version of Tencent QQ, this project is only developed around the interface provided by the go-cqhttp client.
 ## 介绍
-这是一个能够对QQ消息通过第三方推送转发的程序，修改自<a href="https://github.com/zhishixiang/tencent-push">zhishixiang/tencent-push</a>项目。此版本相比原版有以下区别：  
+这是一个能够对QQ消息通过第三方推送转发的程序，修改自<a href="https://github.com/zhishixiang/tencent-push">zhishixiang/tencent-push</a>
+<br>此分支相比原版有以下区别：  
 1.补充了Telegram机器人私聊推送渠道<br>
-2.能够在Telegram中直接显示图片<br>
-3.能够直接显示被At用户的昵称<br>
+2.解析特殊类型消息（@群成员、消息回复、小程序、链接分享卡片）<br>
 ## 使用方法
 ### 运行环境
 Python 3
