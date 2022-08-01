@@ -164,7 +164,7 @@ def replymsg(msgid):
     replymsg_timestamp = replymsg_json["data"]["time"]
     replymsg_styletime = styletime(replymsg_timestamp)
     if TG == "True":
-        replymsg = "__回复：" + replymsg_sender + "(" + replymsg_styletime + "): " + replymsg + "__\n"
+        replymsg = "[回复：" + replymsg_sender + "(" + replymsg_styletime + "): " + replymsg + "]\n"
     else:
         replymsg = f"回复 {replymsg_sender}的消息: "
     return replymsg
