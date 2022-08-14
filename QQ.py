@@ -8,6 +8,7 @@ import urllib.parse
 import traceback
 import re
 import time
+import os
 
 try:
     with open("config.json","r",encoding = 'UTF-8') as f:
@@ -22,6 +23,12 @@ try:
     TG_GroupLink = config["TG_GroupLink"]
 except:
     print("读取配置文件异常,请检查配置文件是否存在或语法是否有问题")
+    assert()
+
+if os.access("face_config.json", os.R_OK):
+    print("表情包配置文件存在")
+else:
+    print("表情包配置文件不存在或无法读取，请检查配置文件是否存在或语法是否有问题")
     assert()
 
 try:
@@ -107,6 +114,15 @@ def msgFormat(msg):
             msg = tittle + '\n' + jumpurl
         else:
             msg = tittle
+    if "CQ:face" in msg:
+        face_idgroup = re.findall('(?<=CQ:face,id=).*?(?=\])', msg)
+        for face_id in face_idgroup:
+            emoji_name = getEmojiName(face_id)
+            emoji_name = f'[{emoji_name}]'
+            regex = '\[CQ:face,id=' + face_id + ']'
+            face_cqcode = re.findall(regex, msg)
+            for face_cqcode in face_cqcode:
+                msg = msg.replace(face_cqcode, emoji_name)
     if "CQ:record" in msg:
         msg = "[语音]"
     if "CQ:share" in msg:
@@ -169,6 +185,16 @@ def replymsg(msgid):
     else:
         replymsg = f"回复 {replymsg_sender}的消息: "
     return replymsg
+
+def getEmojiName(face_id):
+    with open('face_config.json', 'r', encoding='utf-8') as f:
+        face_data = json.load(f)
+        len_face = len(face_data["sysface"])
+    for i in range(0, len_face):
+        if face_data["sysface"][i]['QSid'] == face_id:
+            QDes = face_data['sysface'][i]['QDes']
+            face_name = QDes.replace('/','')
+            return face_name
 
 async def errorprocess(msg):
     currentPath = os.getcwd().replace('\\', '/')
