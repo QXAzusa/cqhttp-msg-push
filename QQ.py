@@ -25,10 +25,12 @@ except:
     print("读取配置文件异常,请检查配置文件是否存在或语法是否有问题")
     assert()
 
-if os.access("face_config.json", os.R_OK):
-    print("表情包配置文件存在")
-else:
-    print("表情包配置文件不存在或无法读取，请检查配置文件是否存在或语法是否有问题")
+try:
+    with open('face_config.json', 'r', encoding='utf-8') as f:
+        face_data = json.load(f)
+    len_face = len(face_data["sysface"])
+except:
+    print("读取表情包配置文件异常,请检查配置文件是否存在或语法是否有问题")
     assert()
 
 try:
@@ -187,9 +189,6 @@ def replymsg(msgid):
     return replymsg
 
 def getEmojiName(face_id):
-    with open('face_config.json', 'r', encoding='utf-8') as f:
-        face_data = json.load(f)
-        len_face = len(face_data["sysface"])
     for i in range(0, len_face):
         if face_data["sysface"][i]['QSid'] == face_id:
             QDes = face_data['sysface'][i]['QDes']
