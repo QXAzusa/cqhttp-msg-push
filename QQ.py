@@ -319,34 +319,6 @@ async def recvMsg():
                     else:
                         url = f"https://api.telegram.org/bot{KEY}/sendMessage"
                     await httpx.AsyncClient().post(url=url, data=senddata)
-            elif "[CQ:at,qq=%s]" % userId in msg:
-                msg = msg.replace("[CQ:at,qq=%s]" % userId, "[有人@我]")
-                print("群聊%s有人@我:%s:%s" % (groupName, nickName, msg))
-                if MiPush == "True":
-                    if card != "":
-                        await httpx.AsyncClient().post("https://tdtt.top/send", data={'title': '%s' % groupName,'content': '%s:%s' % (card, msg),'alias': KEY})
-                    else:
-                        await httpx.AsyncClient().post("https://tdtt.top/send", data={'title': '%s' % groupName,'content': '%s:%s' % (nickName, msg), 'alias': KEY})
-                if FCM == "True":
-                    if card != "":
-                        await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id': '%s' % KEY, 'title': groupName,'message': '%s:%s' % (card, msg), 'type': 'groupMsg'})
-                    else:
-                        await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id': '%s' % KEY, 'title': groupName,'message': '%s:%s' % (nickName, msg), 'type': 'groupMsg'})
-                if TG == "True":
-                    if str(groupId) in TG_GroupLink:
-                        TG_ID = TG_GroupLink[str(groupId)]
-                    else:
-                        TG_ID = TG_UID
-                    if card != "":
-                        msg = card + "[" + groupName + "]" + ":\n" + msg
-                    else:
-                        msg = nickName + "[" + groupName + "]" + ":\n" + msg
-                    senddata = {"chat_id": TG_ID, "text": msg, "disable_web_page_preview": "true"}
-                    if TG_API != "":
-                        url = f"https://{TG_API}/bot{KEY}/sendMessage"
-                    else:
-                        url = f"https://api.telegram.org/bot{KEY}/sendMessage"
-                    await httpx.AsyncClient().post(url=url, data=senddata)
     except Exception as e:
         errorprocess(traceback.format_exc())
         print(traceback.format_exc())
