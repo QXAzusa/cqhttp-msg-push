@@ -4,6 +4,7 @@ from flask import Flask,request,jsonify
 import json
 import requests
 import httpx
+import html
 import urllib.parse
 import traceback
 import re
@@ -141,6 +142,7 @@ def msgFormat(msg):
         msg = '[卡片消息]'
     if "戳一戳" in msg:
         msg = "戳了你一下"
+    msg = html.unescape(msg)
     return msg
 
 def getGroupName(groupId):
