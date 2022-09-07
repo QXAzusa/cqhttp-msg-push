@@ -45,15 +45,15 @@ def msgFormat(msg):
     if "CQ:image" in msg:
         if TG == "True":
             img_cqcode = re.findall('\[CQ:image.*?]', msg)
-            for code in img_cqcode:
-                imageurl = re.findall('(?<=,url=).*?(?=\?term=)', code)
+            for cqcode in img_cqcode:
+                imageurl = re.findall('(?<=,url=).*?(?=\?term=)', cqcode)
                 imageurl = ' '.join(imageurl)
                 renew = '[图片] ' + imageurl + '\n'
-                msg = msg.replace(code, renew)
+                msg = msg.replace(cqcode, renew)
         else:
             img_cqcode = re.findall('\[CQ:image.*?]', msg)
-            for code in img_cqcode:
-                msg = msg.replace(code, '[图片]')
+            for cqcode in img_cqcode:
+                msg = msg.replace(cqcode, '[图片]')
     if "CQ:video" in msg:
         if TG == "True":
             videourl = re.findall('(?<=.url=).*?(?=,])', msg)
@@ -121,8 +121,8 @@ def msgFormat(msg):
             emoji_name = f'[{emoji_name}]'
             regex = '\[CQ:face,id=' + face_id + ']'
             face_cqcode = re.findall(regex, msg)
-            for face_cqcode in face_cqcode:
-                msg = msg.replace(face_cqcode, emoji_name)
+            for cqcode in face_cqcode:
+                msg = msg.replace(cqcode, emoji_name)
     if "CQ:record" in msg:
         msg = "[语音]"
     if "CQ:share" in msg:
@@ -150,8 +150,8 @@ def getGroupName(groupId):
 
 def getnickname(id):
     url = 'http://localhost:5700/get_stranger_info?user_id=' + str(id)
-    jsonnickname = json.loads(requests.get(url).text)
-    return jsonnickname["data"]["nickname"]
+    userInfo = json.loads(requests.get(url).text)
+    return userInfo["data"]["nickname"]
 
 def styletime(now):
     timeArray = time.localtime(now)
