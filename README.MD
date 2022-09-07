@@ -18,23 +18,18 @@ Python 3
 ```yaml
 # 连接服务列表
 servers:
-  # HTTP 通信设置
-  - http:
-      # 服务端监听地址
-      host: 127.0.0.1
-      # 服务端监听端口
-      port: 5700
-      # 反向HTTP超时时间, 单位秒
-      # 最小值为5，小于5将会忽略本项设置
-      timeout: 5
+  - http: # HTTP 通信设置
+      address: 127.0.0.1:5700 # HTTP监听地址
+      timeout: 5      # 反向 HTTP 超时时间, 单位秒，<5 时将被忽略
+      long-polling:   # 长轮询拓展
+        enabled: false       # 是否开启
+        max-queue-size: 2000 # 消息队列大小，0 表示不限制队列大小，谨慎使用
       middlewares:
         <<: *default # 引用默认中间件
-      # 反向HTTP POST地址列表
-      post:
-      #- url: '' # 地址
-      #  secret: ''           # 密钥
+      post:           # 反向HTTP POST地址列表
       - url: http://127.0.0.1:5000/ # 地址
-      #  secret: ''          # 密钥
+        max-retries: 10             # 最大重试，0 时禁用
+        retries-interval: 1000      # 重试时间，单位毫秒，0 时立即
 ```
 ### MiPush
 前往酷安下载安装“<a href="https://www.coolapk.com/apk/top.tdtt.news">消息接收</a>”，显示注册成功后，点击设置别名，尽量设置复杂一点。设置完后记得设置的别名。
