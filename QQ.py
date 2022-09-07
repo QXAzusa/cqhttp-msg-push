@@ -163,10 +163,10 @@ def getfriendmark(UID):
     try:
         for i in range(length):
             if UID == friendInfo["data"][i]["user_id"]:
-                if friendInfo["data"]["remark"] != "":
-                    nickname = friendInfo["data"]["remark"]
+                if friendInfo["data"][i]["remark"] != "":
+                    nickname = friendInfo["data"][i]["remark"]
                 else:
-                    nickname = friendInfo["data"]["nickname"]
+                    nickname = friendInfo["data"][i]["nickname"]
     except:
         try:
             nickname = getnickname(UID)
