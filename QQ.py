@@ -228,7 +228,7 @@ def getEmojiName(face_id):
     return face_name
 
 
-@app.route("/",methods=['POST'])
+@app.route("/",methods=['GET', 'POST'])
 async def recvMsg():
     global TG_ID, groupId
     groupId = ''
