@@ -1,3 +1,5 @@
+# coding=utf-8
+
 import json
 import requests
 import httpx
@@ -18,6 +20,7 @@ log.setLevel(logging.ERROR)
 def prt(mes):
     print(str(datetime.now().strftime('[%Y.%m.%d %H:%M:%S] ')) + str(mes))
 
+
 try:
     import config
 except:
@@ -35,7 +38,7 @@ except:
 try:
     groupInfo = json.loads(requests.get("http://localhost:5700/get_group_list").text)
     friendInfo = json.loads(requests.get("http://localhost:5700/get_friend_list").text)
-    userId = json.loads(requests.get("http://localhost:5700/get_login_info").text)["data"]["user_id"]
+    userId = json.loads(requests.get("http://localhost:5700/get_login_info").text).get("data").get("user_id")
 except:
     prt("无法从go-cqhttp获取信息,请检查go-cqhttp是否运行或端口配置是否正确")
     os._exit(0)
@@ -149,16 +152,16 @@ def msgFormat(msg, groupid='0'):
 
 
 def getGroupName(groupId):
-    length = len(groupInfo["data"])
+    length = len(groupInfo.get("data"))
     for i in range(length):
-        if groupId == groupInfo["data"][i]["group_id"]:
-            return groupInfo["data"][i]["group_name"]
+        if groupId == groupInfo.get("data")[i].get("group_id"):
+            return groupInfo.get("data")[i].get("group_name")
 
 
 def getnickname(id):
     url = 'http://localhost:5700/get_stranger_info?user_id=' + str(id)
     userInfo = json.loads(requests.get(url).text)
-    return userInfo["data"]["nickname"]
+    return userInfo.get("data").get("nickname")
 
 
 def styletime(now):
@@ -171,21 +174,21 @@ def getfriendmark(UID):
     name = 'None'
     length = len(friendInfo.get("data"))
     for i in range(length):
-        if UID == friendInfo["data"][i]["user_id"]:
-            if friendInfo["data"][i]["remark"] != '':
-                name = friendInfo["data"][i]["remark"]
+        if UID == friendInfo.get("data")[i].get("user_id"):
+            if friendInfo.get("data")[i].get("remark") != '':
+                name = friendInfo.get("data")[i].get("remark")
             else:
-                name = friendInfo["data"][i]["nickname"]
+                name = friendInfo.get("data")[i].get("nickname")
             break
     if name == 'None':
         name = getnickname(UID) or "未知"
     return name
 
 
-async def data_send(url, **kwargs):
+def data_send(url, **kwargs):
     for i in range(1, 5):
         try:
-            response = await httpx.AsyncClient().post(url, data=kwargs, timeout=5)
+            response = requests.post(url, data=kwargs, timeout=5)
             if response.status_code > 299:
                 raise RuntimeError
         except:
@@ -218,8 +221,8 @@ def replymsg(msgid):
 def getEmojiName(face_id):
     face_name = '表情'
     for i in range(0, len_face):
-        if face_data["sysface"][i]['QSid'] == face_id:
-            QDes = face_data['sysface'][i]['QDes']
+        if face_data.get("sysface")[i].get('QSid') == face_id:
+            QDes = face_data.get('sysface')[i].get('QDes')
             face_name = QDes.replace('/','')
             break
     return face_name
@@ -233,82 +236,82 @@ async def recvMsg():
     data = request.get_data()
     json_data = json.loads(data.decode("utf-8"))
     try:
-        if json_data["post_type"] == "meta_event":
-            if json_data["meta_event_type"] == "heartbeat":
-                prt("接收心跳信号成功")
-        elif json_data["post_type"] == "request":
-            if json_data["request_type"] == "friend":
-                friendId = json_data["user_id"]
+        if json_data.get("post_type") == "request":
+            if json_data.get("request_type") == "friend":
+                friendId = json_data.get("user_id")
+                nickname = getnickname(friendId)
                 prt("新的好友添加请求：%s" % friendId)
                 if str(config.MiPush) == "True":
-                    asyncio.get_event_loop().run_until_complete(data_send(config.MiPush_API, title="新的好友添加请求", content='%s想要添加您为好友' % friendId, alias=config.KEY))
+                    data_send(config.MiPush_API, title="新的好友添加请求", content='%s想要添加您为好友' % friendId, alias=config.KEY)
                 elif str(config.FCM) == "True":
-                    asyncio.get_event_loop().run_until_complete(data_send(config.FCM_API, id=config.KEY, title="新的好友添加请求", message='%s想要添加您为好友' % friendId, type='FriendAdd'))
+                    data_send(config.FCM_API, id=config.KEY, title="新的好友添加请求", message='%s想要添加您为好友' % friendId, type='FriendAdd')
                 elif str(config.TG) == "True":
                     msg = friendId + ' 请求添加您为好友'
-                    url = f"{config.TG_API}/bot{config.KEY}/sendMessage"
-                    asyncio.get_event_loop().run_until_complete(data_send(url=url, chat_id=TG_ID, text=str(msg), disable_web_page_preview="true"))
-        elif json_data["post_type"] == "notice":
-            if json_data["notice_type"] == "group_upload":
-                if json_data["group_id"] in config.WhiteList:
-                    groupId = json_data["group_id"]
+                    url = f"{str(config.TG_API)}/bot{str(config.KEY)}/sendMessage"
+                    data_send(str(url), chat_id=str(TG_ID), text=str(msg), disable_web_page_preview="true")
+        elif json_data.get("post_type") == "notice":
+            if json_data.get("notice_type") == "group_upload":
+                if str(json_data.get("group_id")) in list(list(config.WhiteList)):
+                    groupId = json_data.get("group_id")
                     groupName = getGroupName(groupId)
-                    filename = json_data["file"]["name"]
-                    userid = json_data["user_id"]
+                    filename = json_data.get("file").get("name")
+                    userid = json_data.get("user_id")
                     cardurl = 'http://localhost:5700/get_group_member_info?group_id=' + str(groupId) + "&user_id=" + str(userid)
                     card = json.loads(requests.get(cardurl).content)
-                    if card["data"]["card"] != "":
-                        card = card["data"]["card"] + " "
+                    if card.get("data").get("card") != "":
+                        card = card.get("data").get("card") + " "
                     else:
-                        card = card["data"]["nickname"] + " "
-                    msg = card + '上传了 ' + filename + ' 到 ' + groupName
+                        card = card.get("data").get("nickname") + " "
+                    msg = card + '上传了 ' + filename
+                    prt(str(groupName) + ': ' + str(msg))
                     if str(config.MiPush) == "True":
-                        asyncio.get_event_loop().run_until_complete(data_send(config.MiPush_API, title="QQ通知", content='%s' % (msg), alias=config.KEY))
+                        data_send(config.MiPush_API, title="QQ通知", content='%s' % (msg), alias=config.KEY)
                     if str(config.FCM) == "True":
-                        asyncio.get_event_loop().run_until_complete(data_send(config.FCM_API, id=config.KEY, title="QQ通知", message=str(msg), type='privateMsg'))
+                        data_send(config.FCM_API, id=config.KEY, title="QQ通知", message=str(msg), type='privateMsg')
                     if str(config.TG) == "True":
-                        if str(groupId) in config.TG_GroupLink:
-                            TG_ID = config.TG_GroupLink[str(groupId)]
-                        url = f"{config.TG_API}/bot{config.KEY}/sendMessage"
-                        asyncio.get_event_loop().run_until_complete(data_send(url=url, chat_id=TG_ID, text=msg, disable_web_page_preview="true"))
+                        if str(groupId) in dict(config.TG_GroupLink):
+                            TG_ID = dict(config.TG_GroupLink).get(str(groupId))
+                        url = f"{str(config.TG_API)}/bot{str(config.KEY)}/sendMessage"
+                        data_send(str(url), chat_id=str(TG_ID), text=str(msg), disable_web_page_preview="true")
         elif json_data.get("message_type") == "private":
             msg = msgFormat(json_data.get("message"))
             uid = json_data.get("sender").get("user_id")
             nickname = getfriendmark(uid)
             prt("%s: %s" % (nickname, msg))
             if str(config.MiPush) == "True":
-                asyncio.get_event_loop().run_until_complete(data_send(config.MiPush_API, title=str(nickname), content=str(msg), alias=config.KEY))
+                data_send(config.MiPush_API, title=str(nickname), content=str(msg), alias=config.KEY)
             elif str(config.FCM) == "True":
-                asyncio.get_event_loop().run_until_complete(data_send(config.FCM_API, id=config.KEY, title=str(nickname), message=msg, type='privateMsg'))
+                data_send(config.FCM_API, id=config.KEY, title=str(nickname), message=msg, type='privateMsg')
             elif str(config.TG) == "True":
-                if str(uid) in config.TG_GroupLink:
-                    TG_ID = config.TG_GroupLink[str(uid)]
+                if str(uid) in dict(config.TG_GroupLink):
+                    TG_ID = dict(config.TG_GroupLink).get(str(uid))
                 else:
-                    TG_ID = config.TG_UID
+                    TG_ID = str(config.TG_UID)
                 msg = nickname + ":\n" + msg
-                url = f"{config.TG_API}/bot{config.KEY}/sendMessage"
-                asyncio.get_event_loop().run_until_complete(data_send(url=url, chat_id=TG_ID, text=str(msg), disable_web_page_preview="true"))
-        elif json_data["message_type"] == "group":
-            groupId = json_data["group_id"]
+                url = f"{str(config.TG_API)}/bot{str(config.KEY)}/sendMessage"
+                data_send(str(url), chat_id=str(TG_ID), text=str(msg), disable_web_page_preview="true")
+        elif json_data.get("message_type") == "group":
+            uid = json_data.get("sender").get("user_id")
+            nickName = json_data.get("sender").get("nickname")
+            card = json_data.get("sender").get("card")
+            groupId = json_data.get("group_id")
+            msg = msgFormat(json_data.get("message"), groupid=str(groupId))
             groupName = getGroupName(groupId)
-            nickName = json_data["sender"]["nickname"]
-            card = json_data["sender"]["card"]
-            msg = msgFormat(json_data.get("message"), groupId)
-            if str(msg) != 'None' and groupId in list(config.WhiteList):
-                prt("群聊%s的消息:%s:%s" % (groupName, nickName, msg))
-                nickName = card if card != "" else nickName
+            nickName = str(card) if str(card) != "" else str(nickName)
+            if str(msg) != 'None' and str(groupId) in list(config.WhiteList):
+                prt("%s: %s: %s" % (groupName, nickName, msg))
                 if str(config.MiPush) == "True":
-                    asyncio.get_event_loop().run_until_complete(data_send(config.MiPush_API, title='%s' % groupName, content='%s:%s' % (nickName, msg), alias=config.KEY))
+                    data_send(config.MiPush_API, title='%s' % groupName, content='%s:%s' % (nickName, msg), alias=config.KEY)
                 if str(config.FCM) == "True":
-                    asyncio.get_event_loop().run_until_complete(data_send(config.FCM_API, id='%s' % config.KEY, title=str(groupName), message='%s:%s' % (nickName, msg), type='groupMsg'))
+                    data_send(config.FCM_API, id='%s' % config.KEY, title=str(groupName), message='%s:%s' % (nickName, msg), type='groupMsg')
                 if str(config.TG) == "True":
-                    if str(groupId) in config.TG_GroupLink:
-                        TG_ID = config.TG_GroupLink[str(groupId)]
+                    if str(groupId) in dict(config.TG_GroupLink):
+                        TG_ID = dict(config.TG_GroupLink).get(str(groupId))
                     else:
-                        TG_ID = config.TG_UID
+                        TG_ID = str(config.TG_UID)
                     text = nickName + "[" + groupName + "]" + ":\n" + msg
-                    url = f"{config.TG_API}/bot{config.KEY}/sendMessage"
-                    asyncio.get_event_loop().run_until_complete(data_send(url=url, chat_id=TG_ID, text=str(text), disable_web_page_preview="true"))
+                    url = f"{str(config.TG_API)}/bot{str(config.KEY)}/sendMessage"
+                    data_send(str(url), chat_id=str(TG_ID), text=str(text), disable_web_page_preview="true")
     except:
         with open(str((os.path.split(os.path.realpath(__file__))[0]).replace('\\', '/')) + '/error.log', 'a', encoding='utf-8') as f:
             f.write(str(datetime.now().strftime('[%Y.%m.%d %H:%M:%S] ')) + str(traceback.format_exc()) + '\n')
