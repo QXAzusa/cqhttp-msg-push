@@ -160,20 +160,18 @@ def styletime(now):
 
 
 def getfriendmark(UID):
-    length = len(friendInfo["data"])
-    try:
-        for i in range(length):
-            if UID == friendInfo["data"][i]["user_id"]:
-                if friendInfo["data"][i]["remark"] != "":
-                    nickname = friendInfo["data"][i]["remark"]
-                else:
-                    nickname = friendInfo["data"][i]["nickname"]
-    except:
-        try:
-            nickname = getnickname(UID)
-        except:
-            nickname = "未知"
-    return nickname
+    name = 'None'
+    length = len(friendInfo.get("data"))
+    for i in range(length):
+        if UID == friendInfo["data"][i]["user_id"]:
+            if friendInfo["data"][i]["remark"] != '':
+                name = friendInfo["data"][i]["remark"]
+            else:
+                name = friendInfo["data"][i]["nickname"]
+            break
+    if name == 'None':
+        name = getnickname(UID) or "未知"
+    return name
 
 
 def replymsg(msgid):
@@ -191,11 +189,13 @@ def replymsg(msgid):
 
 
 def getEmojiName(face_id):
+    face_name = '表情'
     for i in range(0, len_face):
         if face_data["sysface"][i]['QSid'] == face_id:
             QDes = face_data['sysface'][i]['QDes']
             face_name = QDes.replace('/','')
-            return face_name
+            break
+    return face_name
 
 
 @app.route("/",methods=['POST'])
