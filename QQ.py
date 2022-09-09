@@ -6,6 +6,7 @@ import re
 import os
 import time
 import logging
+import asyncio
 import traceback
 from flask import Flask,request
 from datetime import datetime
@@ -44,7 +45,7 @@ app = Flask(__name__)
 
 def msgFormat(msg, groupid='0'):
     if '[CQ:image' in msg:
-        if config.TG == "True":
+        if str(config.TG) == "True":
             img_cqcode = re.findall('\[CQ:image.*?]', msg)
             for cqcode in img_cqcode:
                 imageurl = re.findall('(?<=,url=).*?(?=\?term=)', cqcode)
@@ -56,7 +57,7 @@ def msgFormat(msg, groupid='0'):
             for cqcode in img_cqcode:
                 msg = msg.replace(cqcode, '[图片]')
     if '[CQ:video' in msg:
-        if config.TG == "True":
+        if str(config.TG) == "True":
             videourl = re.findall('(?<=.url=).*?(?=,])', msg)
             videourl = ' '.join(videourl)
             renew = '[视频] ' + videourl
@@ -69,7 +70,10 @@ def msgFormat(msg, groupid='0'):
         replymsg_id = re.findall('(?<=.id=).*?(?=])', reply_cqcode)
         replymsg_id = ' '.join(replymsg_id)
         reply_format = replymsg(replymsg_id)
-        msg = msg.replace(reply_cqcode, reply_format)
+        if str(reply_format) == 'None':
+            msg == 'None'
+        else:
+            msg = msg.replace(reply_cqcode, reply_format)
     if '[CQ:at' in msg:
         if '[CQ:at,qq=all]' in msg:
             msg = msg.replace('[CQ:at,qq=all]', '@全体成员')
@@ -78,12 +82,16 @@ def msgFormat(msg, groupid='0'):
             for uid in at_id:
                 at_info_api = 'http://localhost:5700/get_group_member_info?group_id=' + str(groupid) + "&user_id=" + str(uid)
                 at_info = json.loads(requests.get(at_info_api).content)
-                if at_info["data"]["card"] != "":
-                    at_name = " @" + at_info["data"]["card"] + " "
+                if str(at_info.get("data")) != 'None':
+                    if at_info.get("data").get("card") != "":
+                        at_name = "@" + str(at_info.get("data").get("card"))
+                    else:
+                        at_name = "@" + str(at_info.get("data").get("nickname"))
+                    at_cqcode = '[CQ:at,qq=' + str(uid) + ']'
+                    msg = msg.replace(at_cqcode, at_name)
                 else:
-                    at_name = " @" + at_info["data"]["nickname"] + " "
-                at_cqcode = '[CQ:at,qq=' + str(uid) + ']'
-                msg = msg.replace(at_cqcode, at_name)
+                    msg = 'None'
+                    break
     if 'com.tencent.miniapp' in msg:
         '''小程序跳转链接'''
         mini_jumpurl = re.findall('(?<="qqdocurl":").*?(?=")', msg)
@@ -97,7 +105,7 @@ def msgFormat(msg, groupid='0'):
         '''小程序归属'''
         mini_from = re.findall('(?<="title":").*?(?=")', msg)
         mini_from = ' '.join(mini_from)
-        if config.TG == "True":
+        if str(config.TG) == "True":
             msg = '[小程序] ' + mini_from + '\n' + mini_tittle + '\n' + mini_jumpurl
         else:
             msg = '[小程序] ' + mini_from + '\n' + mini_tittle
@@ -107,7 +115,7 @@ def msgFormat(msg, groupid='0'):
         jumpurl = jumpurl.replace('\\','')
         tittle = re.findall(r'(?<="title":").*?(?="&)',msg)
         tittle = ' '.join(tittle)
-        if config.TG == 'True':
+        if str(config.TG) == 'True':
             msg = tittle + '\n' + jumpurl
         else:
             msg = tittle
@@ -174,17 +182,36 @@ def getfriendmark(UID):
     return name
 
 
+async def data_send(url, **kwargs):
+    for i in range(1, 5):
+        try:
+            response = await httpx.AsyncClient().post(url, data=kwargs, timeout=5)
+            if response.status_code > 299:
+                raise RuntimeError
+        except:
+            if str(i) == '4':
+                print(str(datetime.now().strftime('[%Y.%m.%d %H:%M:%S] ')) + '连续三次向接口发送数据超时/失败，可能是网络问题或接口失效，终止发送')
+                break
+            print(str(datetime.now().strftime('[%Y.%m.%d %H:%M:%S] ')) + '向接口发送数据超时/失败，第' + str(i) + '次重试')
+        else:
+            print(str(datetime.now().strftime('[%Y.%m.%d %H:%M:%S] ')) + '成功向接口发送数据↑')
+            break
+
+
 def replymsg(msgid):
     replymsg_api= f'http://localhost:5700/get_msg?message_id={msgid}'
     replymsg_json = json.loads(requests.get(replymsg_api).text)
-    replymsg = replymsg_json["data"]["message"]
-    replymsg_sender = replymsg_json["data"]["sender"]["nickname"]
-    replymsg_timestamp = replymsg_json["data"]["time"]
-    replymsg_styletime = styletime(replymsg_timestamp)
-    if config.TG == "True":
-        replymsg = "[回复：" + replymsg_sender + "(" + replymsg_styletime + "): " + replymsg + "]\n"
+    if str(replymsg_json.get("data")) != 'None':
+        replymsg = replymsg_json.get("data").get("message")
+        replymsg_sender = replymsg_json.get("data").get("sender").get("nickname")
+        replymsg_timestamp = replymsg_json.get("data").get("time")
+        replymsg_styletime = styletime(replymsg_timestamp)
+        if str(config.TG) == "True":
+            replymsg = "[回复：" + replymsg_sender + "(" + replymsg_styletime + "): " + replymsg + "]\n"
+        else:
+            replymsg = f"回复 {replymsg_sender}的消息: "
     else:
-        replymsg = f"回复 {replymsg_sender}的消息: "
+        replymsg = 'None'
     return replymsg
 
 
@@ -213,15 +240,14 @@ async def recvMsg():
             if json_data["request_type"] == "friend":
                 friendId = json_data["user_id"]
                 prt("新的好友添加请求：%s" % friendId)
-                if config.MiPush == "True":
-                    await httpx.AsyncClient().post(config.MiPush_API, data={'title': "新的好友添加请求", 'content': '%s想要添加您为好友' % friendId,'alias': config.KEY})
-                elif config.FCM == "True":
-                    await httpx.AsyncClient().post(config.FCM, data={'id': config.KEY, 'title': "新的好友添加请求",'message': '%s想要添加您为好友' % friendId,'type': 'FriendAdd'})
-                elif config.TG == "True":
+                if str(config.MiPush) == "True":
+                    asyncio.get_event_loop().run_until_complete(data_send(config.MiPush_API, title="新的好友添加请求", content='%s想要添加您为好友' % friendId, alias=config.KEY))
+                elif str(config.FCM) == "True":
+                    asyncio.get_event_loop().run_until_complete(data_send(config.FCM_API, id=config.KEY, title="新的好友添加请求", message='%s想要添加您为好友' % friendId, type='FriendAdd'))
+                elif str(config.TG) == "True":
                     msg = friendId + ' 请求添加您为好友'
-                    senddata = {"chat_id": TG_ID, "text": msg, "disable_web_page_preview": "true"}
                     url = f"{config.TG_API}/bot{config.KEY}/sendMessage"
-                    await httpx.AsyncClient().post(url=url, data=senddata)
+                    asyncio.get_event_loop().run_until_complete(data_send(url=url, chat_id=TG_ID, text=str(msg), disable_web_page_preview="true"))
         elif json_data["post_type"] == "notice":
             if json_data["notice_type"] == "group_upload":
                 if json_data["group_id"] in config.WhiteList:
@@ -236,61 +262,53 @@ async def recvMsg():
                     else:
                         card = card["data"]["nickname"] + " "
                     msg = card + '上传了 ' + filename + ' 到 ' + groupName
-                    if config.MiPush == "True":
-                        await httpx.AsyncClient().post(config.MiPush_API, data={'title': "QQ通知", 'content': '%s' % (msg), 'alias': config.KEY})
-                    if config.FCM == "True":
-                        await httpx.AsyncClient().post(config.FCM, data={'id': config.KEY, 'title': "QQ通知", 'message': msg,'type': 'privateMsg'})
-                    if config.TG == "True":
+                    if str(config.MiPush) == "True":
+                        asyncio.get_event_loop().run_until_complete(data_send(config.MiPush_API, title="QQ通知", content='%s' % (msg), alias=config.KEY))
+                    if str(config.FCM) == "True":
+                        asyncio.get_event_loop().run_until_complete(data_send(config.FCM_API, id=config.KEY, title="QQ通知", message=str(msg), type='privateMsg'))
+                    if str(config.TG) == "True":
                         if str(groupId) in config.TG_GroupLink:
                             TG_ID = config.TG_GroupLink[str(groupId)]
-                        senddata = {"chat_id": TG_ID, "text": msg, "disable_web_page_preview": "true"}
                         url = f"{config.TG_API}/bot{config.KEY}/sendMessage"
-                        await httpx.AsyncClient().post(url=url, data=senddata)
-        elif json_data["message_type"] == "private":
-            msg = msgFormat(json_data["message"])
-            uid = json_data["sender"]["user_id"]
+                        asyncio.get_event_loop().run_until_complete(data_send(url=url, chat_id=TG_ID, text=msg, disable_web_page_preview="true"))
+        elif json_data.get("message_type") == "private":
+            msg = msgFormat(json_data.get("message"))
+            uid = json_data.get("sender").get("user_id")
             nickname = getfriendmark(uid)
-            prt("来自%s的私聊消息:%s" % (nickname, msg))
-            if config.MiPush == "True":
-                await httpx.AsyncClient().post(config.MiPush_API, data={'title': nickname, 'content': msg, 'alias': config.KEY})
-            elif config.FCM == "True":
-                await httpx.AsyncClient().post(config.FCM, data={'id': config.KEY, 'title': nickname, 'message': msg,'type': 'privateMsg'})
-            elif config.TG == "True":
+            prt("%s: %s" % (nickname, msg))
+            if str(config.MiPush) == "True":
+                asyncio.get_event_loop().run_until_complete(data_send(config.MiPush_API, title=str(nickname), content=str(msg), alias=config.KEY))
+            elif str(config.FCM) == "True":
+                asyncio.get_event_loop().run_until_complete(data_send(config.FCM_API, id=config.KEY, title=str(nickname), message=msg, type='privateMsg'))
+            elif str(config.TG) == "True":
                 if str(uid) in config.TG_GroupLink:
                     TG_ID = config.TG_GroupLink[str(uid)]
                 else:
                     TG_ID = config.TG_UID
                 msg = nickname + ":\n" + msg
-                senddata = {"chat_id": TG_ID, "text": msg, "disable_web_page_preview": "true"}
                 url = f"{config.TG_API}/bot{config.KEY}/sendMessage"
-                await httpx.AsyncClient().post(url=url, data=senddata)
+                asyncio.get_event_loop().run_until_complete(data_send(url=url, chat_id=TG_ID, text=str(msg), disable_web_page_preview="true"))
         elif json_data["message_type"] == "group":
             groupId = json_data["group_id"]
             groupName = getGroupName(groupId)
             nickName = json_data["sender"]["nickname"]
             card = json_data["sender"]["card"]
-            msg = msgFormat(json_data["message"], groupId)
-            if groupId in config.WhiteList:
+            msg = msgFormat(json_data.get("message"), groupId)
+            if str(msg) != 'None' and groupId in list(config.WhiteList):
                 prt("群聊%s的消息:%s:%s" % (groupName, nickName, msg))
-                if config.MiPush == "True":
-                    if card != "":
-                        await httpx.AsyncClient().post(config.MiPush_API, data={'title': '%s' % groupName,'content': '%s:%s' % (card, msg), 'alias': config.KEY})
-                    else:
-                        await httpx.AsyncClient().post(config.MiPush_API, data={'title': '%s' % groupName, 'content': '%s:%s' % (nickName, msg), 'alias': config.KEY})
-                if config.FCM == "True":
-                    await httpx.AsyncClient().post(config.FCM, data={'id': '%s' % config.KEY, 'title': groupName,'message': '%s:%s' % (nickName, msg), 'type': 'groupMsg'})
-                if config.TG == "True":
+                nickName = card if card != "" else nickName
+                if str(config.MiPush) == "True":
+                    asyncio.get_event_loop().run_until_complete(data_send(config.MiPush_API, title='%s' % groupName, content='%s:%s' % (nickName, msg), alias=config.KEY))
+                if str(config.FCM) == "True":
+                    asyncio.get_event_loop().run_until_complete(data_send(config.FCM_API, id='%s' % config.KEY, title=str(groupName), message='%s:%s' % (nickName, msg), type='groupMsg'))
+                if str(config.TG) == "True":
                     if str(groupId) in config.TG_GroupLink:
                         TG_ID = config.TG_GroupLink[str(groupId)]
                     else:
                         TG_ID = config.TG_UID
-                    if card != "":
-                        text = card + "[" + groupName + "]" + ":\n" + msg
-                    else:
-                        text = nickName + "[" + groupName + "]" + ":\n" + msg
-                    senddata = {"chat_id": TG_ID, "text": text, "disable_web_page_preview": "true"}
+                    text = nickName + "[" + groupName + "]" + ":\n" + msg
                     url = f"{config.TG_API}/bot{config.KEY}/sendMessage"
-                    await httpx.AsyncClient().post(url=url, data=senddata)
+                    asyncio.get_event_loop().run_until_complete(data_send(url=url, chat_id=TG_ID, text=str(text), disable_web_page_preview="true"))
     except:
         with open(str((os.path.split(os.path.realpath(__file__))[0]).replace('\\', '/')) + '/error.log', 'a', encoding='utf-8') as f:
             f.write(str(datetime.now().strftime('[%Y.%m.%d %H:%M:%S] ')) + str(traceback.format_exc()) + '\n')
