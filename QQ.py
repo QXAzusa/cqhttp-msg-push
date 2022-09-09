@@ -80,7 +80,7 @@ def msgFormat(msg, groupid='0'):
         if '[CQ:at,qq=all]' in msg:
             msg = msg.replace('[CQ:at,qq=all]', '@全体成员')
         else:
-            at_id = re.findall('\[CQ:at,qq=.*?\]', str(msg))
+            at_id = re.findall('(?<=\[CQ:at,qq=).*?(?=])', str(msg))
             for uid in at_id:
                 at_info_api = 'http://localhost:5700/get_group_member_info?group_id=' + str(groupid) + "&user_id=" + str(uid)
                 at_info = json.loads(requests.get(at_info_api).content)
