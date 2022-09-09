@@ -9,7 +9,7 @@ import re
 import time
 
 try:
-    with open("config.json","r",encoding = 'UTF-8') as f:
+    with open(str((os.path.split(os.path.realpath(__file__))[0]).replace('\\', '/')) + '/config.json',"r",encoding = 'UTF-8') as f:
         config = json.load(f)
     group_whitelist = config["WhiteList"]
     MiPush = config["MiPush"]
@@ -24,9 +24,9 @@ except:
     assert()
 
 try:
-    with open('face_config.json', 'r', encoding='utf-8') as f:
+    with open(str((os.path.split(os.path.realpath(__file__))[0]).replace('\\', '/')) + '/face_config.json', 'r', encoding='utf-8') as f:
         face_data = json.load(f)
-    len_face = len(face_data["sysface"])
+    len_face = len(face_data.get("sysface"))
 except:
     print("读取表情包配置文件异常,请检查配置文件是否存在或语法是否有问题")
     assert()
