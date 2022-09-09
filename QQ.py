@@ -8,6 +8,7 @@ import os
 import time
 import logging
 import traceback
+from requests.packages import urllib3
 from flask import Flask,request
 from datetime import datetime
 
@@ -186,7 +187,7 @@ def getfriendmark(UID):
 def data_send(url, **kwargs):
     for i in range(1, 5):
         try:
-            response = requests.post(url, data=kwargs, timeout=5)
+            response = requests.post(url, data=kwargs, timeout=5, verify=False)
             if response.status_code > 299:
                 raise RuntimeError
         except:
@@ -318,6 +319,7 @@ async def recvMsg():
 
 
 if __name__ == '__main__':
+    urllib3.disable_warnings()
     errorlog_clean = open(str((os.path.split(os.path.realpath(__file__))[0]).replace('\\', '/')) + '/error.log', 'w').close()
     prt('程序开始运行')
     app.run(host="127.0.0.1",port=5000)
