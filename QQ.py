@@ -296,7 +296,7 @@ async def recvMsg():
             msg = msgFormat(json_data.get("message"), groupid=str(groupId))
             groupName = getGroupName(groupId)
             nickName = str(card) if str(card) != "" else str(nickName)
-            if str(msg) != 'None' and str(groupId) in list(config.WhiteList):
+            if str(msg) != 'None' and groupId in list(config.WhiteList):
                 prt("%s: %s: %s" % (groupName, nickName, msg))
                 if str(config.MiPush) == "True":
                     data_send(config.MiPush_API, title='%s' % groupName, content='%s:%s' % (nickName, msg), alias=config.KEY)
