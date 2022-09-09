@@ -37,7 +37,7 @@ servers:
 前往Google Play搜索安装“<a href="https://play.google.com/store/apps/details?id=com.mrivan.wirepusher">WirePusher</a>”，安装好后打开，记录ID
 ### Telegram Bot
 前往<a href="https://t.me/BotFather">@BotFather</a>，发送/newbot，根据指引创建机器人，保存创建后提供的token，最后发送/start给机器人
-### config.py参数填写
+<!--### config.py参数填写
 |      名称     |                                               介绍                                               |    可填写的值   |        必填项       |
 |:-------------:|:-----------------------------------------------------------------------------------------------:|:--------------:|:-------------------:|
 |    Mipush     |                                         MiPush推送选择                                           |   True/False   |       ✔ 三选一      |
@@ -50,6 +50,18 @@ servers:
 |   MiPush_API  |                                           MiPush推送接口                                         |                |  Mipush为True时必填  |
 |    FCM_API    |                                             FCM推送接口                                          |                |   FCM为True时必填    |
 |    TG_API     |                                             TG推送接口                                           |                |    TG为True时必填    |
+-->
+### config.js参数填写
+|    名称     |                                  介绍                                   |    可填写     |   必填项    |
+|:---------:|:---------------------------------------------------------------------:|:----------:|:--------:|
+|  Mipush   |                               MiPush选择                                | True/False |   ✔ 三选一   |
+|    FCM    |                               FCMt推送选择                                | True/False |    ✔ 三选一     |
+|    TG     |                              TG Bot推送选择                               | True/False |    ✔ 三选一     |
+|    KEY    | MIPush:应用”“消息接收”中别名<br/>FCM：应用“WirePusher”中的ID<br/>TG:创建机器人时所提供的token |         |    ✔     |
+| WhiteList |                              需要推送群消息的群号                               |         |    ✔     |
+|  TG_UID   |                             需要接收消息的TG用户ID                             |          |  TG推送必填  |
+|  TG_API   |                             TG推送时所用API的域名                             |         | 可选，不填为默认 |
+|     TG_GroupLink      |        Telegram群组消息绑定关系<br/>格式为：{"群号":"TG群组ID","群号":"TG群组ID"}         |            |     可选     |
 ## JetBrains开源许可
 本项目重度依赖于JetBrains™ PyCharm，感谢JetBrains s.r.o为本项目提供[开源许可证](https://www.jetbrains.com/community/opensource/#support)，如果你同样对开发充满热情并且经常使用JetBrains s.r.o的产品，你也可以尝试通过JetBrains官方渠道[申请](https://www.jetbrains.com/shop/eform/opensource)开源许可证以供核心开发者使用
 
