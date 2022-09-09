@@ -250,7 +250,7 @@ async def recvMsg():
                     data_send(str(url), chat_id=str(TG_ID), text=str(msg), disable_web_page_preview="true")
         elif json_data.get("post_type") == "notice":
             if json_data.get("notice_type") == "group_upload":
-                if str(json_data.get("group_id")) in list(list(config.WhiteList)):
+                if json_data.get("group_id") in list(config.WhiteList):
                     groupId = json_data.get("group_id")
                     groupName = getGroupName(groupId)
                     filename = json_data.get("file").get("name")
