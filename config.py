@@ -1,4 +1,5 @@
 # coding=utf-8
+
 # 推送方式选择
 MiPush = "True"
 FCM = "False"
