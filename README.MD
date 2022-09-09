@@ -43,7 +43,7 @@ servers:
 |    Mipush     |                                         MiPush选择                                         |   True/False   |      ✔ 三选一      |
 |      FCM      |                                       FCMt推送选择                                         |   True/False   |      ✔ 三选一      |
 |      TG       |                                      TG Bot推送选择                                        |   True/False   |      ✔ 三选一      |
-|      KEY      |  MIPush:应用”“消息接收”中别名<br/>FCM：应用“WirePusher”中的ID<br/>TG:创建机器人时所提供的token |                |         ✔         |
+|      KEY      |  MIPush:应用“消息接收”中别名<br/>FCM：应用“WirePusher”中的ID<br/>TG:创建机器人时所提供的token  |                |         ✔         |
 |   WhiteList   |                                    需要推送群消息的群号                                     |                |          ✔         |
 |    TG_UID     |                                   需要接收消息的TG用户ID                                    |                |       TG推送必填    |
 | TG_GroupLink  |           Telegram群组消息绑定关系<br/>格式为：{"群号":"TG群组ID","群号":"TG群组ID"}          |                |         可选        |
