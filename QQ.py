@@ -1,27 +1,17 @@
-from email import message
-from tokenize import group
-from flask import Flask,request,jsonify
 import json
 import requests
 import httpx
 import html
 import re
+import os
 import time
+from flask import Flask,request
 
 try:
-    with open(str((os.path.split(os.path.realpath(__file__))[0]).replace('\\', '/')) + '/config.json',"r",encoding = 'UTF-8') as f:
-        config = json.load(f)
-    group_whitelist = config["WhiteList"]
-    MiPush = config["MiPush"]
-    FCM = config["FCM"]
-    TG = config["TG"]
-    KEY = config["KEY"]
-    TG_UID = config["TG_UID"]
-    TG_API = config["TG_API"]
-    TG_GroupLink = config["TG_GroupLink"]
+    import config
 except:
     print("读取配置文件异常,请检查配置文件是否存在或语法是否有问题")
-    assert()
+    os._exit(0)
 
 try:
     with open(str((os.path.split(os.path.realpath(__file__))[0]).replace('\\', '/')) + '/face_config.json', 'r', encoding='utf-8') as f:
@@ -29,7 +19,7 @@ try:
     len_face = len(face_data.get("sysface"))
 except:
     print("读取表情包配置文件异常,请检查配置文件是否存在或语法是否有问题")
-    assert()
+    os._exit(0)
 
 try:
     groupInfo = json.loads(requests.get("http://localhost:5700/get_group_list").text)
@@ -37,13 +27,14 @@ try:
     userId = json.loads(requests.get("http://localhost:5700/get_login_info").text)["data"]["user_id"]
 except:
     print("无法从go-cqhttp获取信息,请检查go-cqhttp是否运行或端口配置是否正确")
-    assert()
+    os._exit(0)
 
 app = Flask(__name__)
 
+
 def msgFormat(msg, groupid='0'):
     if '[CQ:image' in msg:
-        if TG == "True":
+        if config.TG == "True":
             img_cqcode = re.findall('\[CQ:image.*?]', msg)
             for cqcode in img_cqcode:
                 imageurl = re.findall('(?<=,url=).*?(?=\?term=)', cqcode)
@@ -55,7 +46,7 @@ def msgFormat(msg, groupid='0'):
             for cqcode in img_cqcode:
                 msg = msg.replace(cqcode, '[图片]')
     if '[CQ:video' in msg:
-        if TG == "True":
+        if config.TG == "True":
             videourl = re.findall('(?<=.url=).*?(?=,])', msg)
             videourl = ' '.join(videourl)
             renew = '[视频] ' + videourl
@@ -96,7 +87,7 @@ def msgFormat(msg, groupid='0'):
         '''小程序归属'''
         mini_from = re.findall('(?<="title":").*?(?=")', msg)
         mini_from = ' '.join(mini_from)
-        if TG == "True":
+        if config.TG == "True":
             msg = '[小程序] ' + mini_from + '\n' + mini_tittle + '\n' + mini_jumpurl
         else:
             msg = '[小程序] ' + mini_from + '\n' + mini_tittle
@@ -106,7 +97,7 @@ def msgFormat(msg, groupid='0'):
         jumpurl = jumpurl.replace('\\','')
         tittle = re.findall(r'(?<="title":").*?(?="&)',msg)
         tittle = ' '.join(tittle)
-        if TG == 'True':
+        if config.TG == 'True':
             msg = tittle + '\n' + jumpurl
         else:
             msg = tittle
@@ -138,21 +129,25 @@ def msgFormat(msg, groupid='0'):
     msg = html.unescape(msg)
     return msg
 
+
 def getGroupName(groupId):
     length = len(groupInfo["data"])
     for i in range(length):
         if groupId == groupInfo["data"][i]["group_id"]:
             return groupInfo["data"][i]["group_name"]
 
+
 def getnickname(id):
     url = 'http://localhost:5700/get_stranger_info?user_id=' + str(id)
     userInfo = json.loads(requests.get(url).text)
     return userInfo["data"]["nickname"]
 
+
 def styletime(now):
     timeArray = time.localtime(now)
     otherStyleTime = time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
     return otherStyleTime
+
 
 def getfriendmark(UID):
     length = len(friendInfo["data"])
@@ -170,6 +165,7 @@ def getfriendmark(UID):
             nickname = "未知"
     return nickname
 
+
 def replymsg(msgid):
     replymsg_api= f'http://localhost:5700/get_msg?message_id={msgid}'
     replymsg_json = json.loads(requests.get(replymsg_api).text)
@@ -177,11 +173,12 @@ def replymsg(msgid):
     replymsg_sender = replymsg_json["data"]["sender"]["nickname"]
     replymsg_timestamp = replymsg_json["data"]["time"]
     replymsg_styletime = styletime(replymsg_timestamp)
-    if TG == "True":
+    if config.TG == "True":
         replymsg = "[回复：" + replymsg_sender + "(" + replymsg_styletime + "): " + replymsg + "]\n"
     else:
         replymsg = f"回复 {replymsg_sender}的消息: "
     return replymsg
+
 
 def getEmojiName(face_id):
     for i in range(0, len_face):
@@ -190,9 +187,10 @@ def getEmojiName(face_id):
             face_name = QDes.replace('/','')
             return face_name
 
+
 @app.route("/",methods=['POST'])
 async def recvMsg():
-    global TG_API,TG_ID,groupId
+    global TG_ID, groupId
     groupId = ''
     TG_ID = ''
     data = request.get_data()
@@ -204,21 +202,18 @@ async def recvMsg():
         if json_data["request_type"] == "friend":
             friendId = json_data["user_id"]
             print("新的好友添加请求：%s" % friendId)
-            if MiPush == "True":
-                await httpx.AsyncClient().post("https://tdtt.top/send",data={'title': "新的好友添加请求", 'content': '%s想要添加您为好友' % friendId,'alias': KEY})
-            elif FCM == "True":
-                await httpx.AsyncClient().post("https://wirepusher.com/send", data={'id': KEY, 'title': "新的好友添加请求",'message': '%s想要添加您为好友' % friendId,'type': 'FriendAdd'})
-            elif TG == "True":
+            if config.MiPush == "True":
+                await httpx.AsyncClient().post(config.MiPush_API, data={'title': "新的好友添加请求", 'content': '%s想要添加您为好友' % friendId,'alias': config.KEY})
+            elif config.FCM == "True":
+                await httpx.AsyncClient().post(config.FCM, data={'id': config.KEY, 'title': "新的好友添加请求",'message': '%s想要添加您为好友' % friendId,'type': 'FriendAdd'})
+            elif config.TG == "True":
                 msg = friendId + ' 请求添加您为好友'
                 senddata = {"chat_id": TG_ID, "text": msg, "disable_web_page_preview": "true"}
-                if TG_API != "":
-                    url = f"https://{TG_API}/bot{KEY}/sendMessage"
-                else:
-                    url = f"https://api.telegram.org/bot{KEY}/sendMessage"
+                url = f"{config.TG_API}/bot{config.KEY}/sendMessage"
                 await httpx.AsyncClient().post(url=url, data=senddata)
     elif json_data["post_type"] == "notice":
         if json_data["notice_type"] == "group_upload":
-            if json_data["group_id"] in group_whitelist:
+            if json_data["group_id"] in config.WhiteList:
                 groupId = json_data["group_id"]
                 groupName = getGroupName(groupId)
                 filename = json_data["file"]["name"]
@@ -230,39 +225,33 @@ async def recvMsg():
                 else:
                     card = card["data"]["nickname"] + " "
                 msg = card + '上传了 ' + filename + ' 到 ' + groupName
-                if MiPush == "True":
-                    await httpx.AsyncClient().post("https://tdtt.top/send",data={'title': "QQ通知", 'content': '%s' % (msg), 'alias': KEY})
-                if FCM == "True":
-                    await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id': KEY, 'title': "QQ通知", 'message': msg,'type': 'privateMsg'})
-                if TG == "True":
-                    if str(groupId) in TG_GroupLink:
-                        TG_ID = TG_GroupLink[str(groupId)]
+                if config.MiPush == "True":
+                    await httpx.AsyncClient().post(config.MiPush_API, data={'title': "QQ通知", 'content': '%s' % (msg), 'alias': config.KEY})
+                if config.FCM == "True":
+                    await httpx.AsyncClient().post(config.FCM, data={'id': config.KEY, 'title': "QQ通知", 'message': msg,'type': 'privateMsg'})
+                if config.TG == "True":
+                    if str(groupId) in config.TG_GroupLink:
+                        TG_ID = config.TG_GroupLink[str(groupId)]
                     senddata = {"chat_id": TG_ID, "text": msg, "disable_web_page_preview": "true"}
-                    if TG_API != "":
-                        url = f"https://{TG_API}/bot{KEY}/sendMessage"
-                    else:
-                        url = f"https://api.telegram.org/bot{KEY}/sendMessage"
+                    url = f"{config.TG_API}/bot{config.KEY}/sendMessage"
                     await httpx.AsyncClient().post(url=url, data=senddata)
     elif json_data["message_type"] == "private":
         msg = msgFormat(json_data["message"])
         uid = json_data["sender"]["user_id"]
         nickname = getfriendmark(uid)
         print("来自%s的私聊消息:%s" % (nickname, msg))
-        if MiPush == "True":
-            await httpx.AsyncClient().post("https://tdtt.top/send",data={'title': nickname, 'content': msg, 'alias': KEY})
-        elif FCM == "True":
-            await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id': KEY, 'title': nickname, 'message': msg,'type': 'privateMsg'})
-        elif TG == "True":
-            if str(uid) in TG_GroupLink:
-                TG_ID = TG_GroupLink[str(uid)]
+        if config.MiPush == "True":
+            await httpx.AsyncClient().post(config.MiPush_API, data={'title': nickname, 'content': msg, 'alias': config.KEY})
+        elif config.FCM == "True":
+            await httpx.AsyncClient().post(config.FCM, data={'id': config.KEY, 'title': nickname, 'message': msg,'type': 'privateMsg'})
+        elif config.TG == "True":
+            if str(uid) in config.TG_GroupLink:
+                TG_ID = config.TG_GroupLink[str(uid)]
             else:
-                TG_ID = TG_UID
+                TG_ID = config.TG_UID
             msg = nickname + ":\n" + msg
             senddata = {"chat_id": TG_ID, "text": msg, "disable_web_page_preview": "true"}
-            if TG_API != "":
-                url = f"https://{TG_API}/bot{KEY}/sendMessage"
-            else:
-                url = f"https://api.telegram.org/bot{KEY}/sendMessage"
+            url = f"{config.TG_API}/bot{config.KEY}/sendMessage"
             await httpx.AsyncClient().post(url=url, data=senddata)
     elif json_data["message_type"] == "group":
         groupId = json_data["group_id"]
@@ -270,31 +259,29 @@ async def recvMsg():
         nickName = json_data["sender"]["nickname"]
         card = json_data["sender"]["card"]
         msg = msgFormat(json_data["message"], groupId)
-        if groupId in group_whitelist:
+        if groupId in config.WhiteList:
             print("群聊%s的消息:%s:%s" % (groupName, nickName, msg))
-            if MiPush == "True":
+            if config.MiPush == "True":
                 if card != "":
-                    await httpx.AsyncClient().post("https://tdtt.top/send", data={'title': '%s' % groupName,'content': '%s:%s' % (card, msg), 'alias': KEY})
+                    await httpx.AsyncClient().post(config.MiPush_API, data={'title': '%s' % groupName,'content': '%s:%s' % (card, msg), 'alias': config.KEY})
                 else:
-                    await httpx.AsyncClient().post("https://tdtt.top/send", data={'title': '%s' % groupName, 'content': '%s:%s' % (nickName, msg), 'alias': KEY})
-            if FCM == "True":
-                await httpx.AsyncClient().post("https://wirepusher.com/send",data={'id': '%s' % KEY, 'title': groupName,'message': '%s:%s' % (nickName, msg), 'type': 'groupMsg'})
-            if TG == "True":
-                if str(groupId) in TG_GroupLink:
-                    TG_ID = TG_GroupLink[str(groupId)]
+                    await httpx.AsyncClient().post(config.MiPush_API, data={'title': '%s' % groupName, 'content': '%s:%s' % (nickName, msg), 'alias': config.KEY})
+            if config.FCM == "True":
+                await httpx.AsyncClient().post(config.FCM, data={'id': '%s' % config.KEY, 'title': groupName,'message': '%s:%s' % (nickName, msg), 'type': 'groupMsg'})
+            if config.TG == "True":
+                if str(groupId) in config.TG_GroupLink:
+                    TG_ID = config.TG_GroupLink[str(groupId)]
                 else:
-                    TG_ID = TG_UID
+                    TG_ID = config.TG_UID
                 if card != "":
                     text = card + "[" + groupName + "]" + ":\n" + msg
                 else:
                     text = nickName + "[" + groupName + "]" + ":\n" + msg
                 senddata = {"chat_id": TG_ID, "text": text, "disable_web_page_preview": "true"}
-                if TG_API != "":
-                    url = f"https://{TG_API}/bot{KEY}/sendMessage"
-                else:
-                    url = f"https://api.telegram.org/bot{KEY}/sendMessage"
+                url = f"{config.TG_API}/bot{config.KEY}/sendMessage"
                 await httpx.AsyncClient().post(url=url, data=senddata)
     return "200 OK"
+
 
 if __name__ == '__main__':
     app.run(host="127.0.0.1",port=5000)
