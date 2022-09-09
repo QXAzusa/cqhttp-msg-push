@@ -186,7 +186,7 @@ def getfriendmark(UID):
 def data_send(url, **kwargs):
     for i in range(1, 5):
         try:
-            response = requests.post(url, data=kwargs, timeout=5)
+            response = requests.post(url, data=kwargs, timeout=5, verify=False)
             if response.status_code > 299:
                 raise RuntimeError
         except:
