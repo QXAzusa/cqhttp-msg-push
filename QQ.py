@@ -57,7 +57,8 @@ def msgFormat(msg, groupid='0'):
         msg = '[视频] ' + videourl if str(config.TG) == "True" else "[视频]"
     if '[CQ:reply' in msg:
         replymsg_id = ''.join(re.findall('\[CQ:reply,id=(.*?)\]', msg))
-        msg = msg.replace('[CQ:reply,id=' + str(replymsg_id) + ']', '[消息回复]')
+        reply_format = replymsg(replymsg_id)
+        msg = msg.replace('[CQ:reply,id=' + str(replymsg_id) + ']', reply_format)
     if '[CQ:at' in msg:
         if '[CQ:at,qq=all]' in msg:
             msg = msg.replace('[CQ:at,qq=all]', '@全体成员')
@@ -155,6 +156,20 @@ def data_send(url, **kwargs):
         else:
             print(str(datetime.now().strftime('[%Y.%m.%d %H:%M:%S] ')) + '成功向接口发送数据↑')
             break
+
+
+def replymsg(msgid):
+    replymsg_api= f'http://localhost:5700/get_msg?message_id={msgid}'
+    replymsg_json = json.loads(requests.get(replymsg_api).text)
+    if str(replymsg_json.get("data")) != 'None':
+        replymsg = replymsg_json.get("data").get("message")
+        replymsg_sender = replymsg_json.get("data").get("sender").get("nickname")
+        replymsg_timestamp = replymsg_json.get("data").get("time")
+        replymsg_styletime = styletime(replymsg_timestamp)
+        reply_msg = "[回复" + replymsg_sender + "(" + replymsg_styletime + "): " + replymsg + "]\n" if str(config.TG) == "True" else replymsg = f"[回复{replymsg_sender}的消息]"
+    else:
+        reply_msg = '[消息回复]'
+    return reply_msg
 
 
 def getEmojiName(face_id):
