@@ -175,8 +175,8 @@ def replymsg(msgid):
 def getEmojiName(face_id):
     face_name = '[表情]'
     for i in range(0, len_face):
-        QSid = face_data.get('sysface')[i].get('QSid')
-        QDes = face_data.get('sysface')[i].get('QDes')
+        QSid = face_data['sysface'][i]['QSid']
+        QDes = face_data['sysface'][i]['QDes']
         if QSid == face_id:            
             face_name = '[' + QDes.replace('/','') + ']'
             break
