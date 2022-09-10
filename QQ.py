@@ -166,7 +166,7 @@ def replymsg(msgid):
         replymsg_sender = replymsg_json.get("data").get("sender").get("nickname")
         replymsg_timestamp = replymsg_json.get("data").get("time")
         replymsg_styletime = styletime(replymsg_timestamp)
-        reply_msg = "[回复" + replymsg_sender + "(" + replymsg_styletime + "): " + replymsg + "]\n" if str(config.TG) == "True" else replymsg = f"[回复{replymsg_sender}的消息]"
+        reply_msg = "[回复" + replymsg_sender + "(" + replymsg_styletime + "): " + replymsg + "]\n" if str(config.TG) == "True" else f"[回复{replymsg_sender}的消息]"
     else:
         reply_msg = '[消息回复]'
     return reply_msg
