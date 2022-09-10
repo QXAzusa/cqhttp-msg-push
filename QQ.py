@@ -55,7 +55,7 @@ def msgFormat(msg, groupid='0'):
         videourl = re.findall('\[CQ:video.*,url=([^\]]*?)\]', msg)[0]
         msg = '[视频] ' + videourl if str(config.TG) == "True" else "[视频]"
     if '[CQ:reply' in msg:
-        replymsg_id = ''.join(re.findall('\[CQ:reply,id=([\-\d]*?)\]', msg))
+        replymsg_id = re.findall('\[CQ:reply,id=([\-\d]*?)\]', msg)[0]
         reply_format = replymsg(replymsg_id)
         msg = msg.replace('[CQ:reply,id=' + str(replymsg_id) + ']', reply_format)
     if '[CQ:at' in msg:
