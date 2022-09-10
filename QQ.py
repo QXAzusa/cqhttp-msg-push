@@ -208,8 +208,8 @@ async def recvMsg():
                     data_send(str(url), chat_id=str(TG_ID), text=str(msg), disable_web_page_preview="true")
         elif json_data.get("post_type") == "notice":
             if json_data.get("notice_type") == "group_upload":
-                if json_data.get("group_id") in list(config.WhiteList):
-                    groupId = json_data.get("group_id")
+                groupId = json_data.get("group_id")
+                if groupId in list(config.WhiteList):
                     groupName = getGroupName(groupId)
                     filename = json_data.get("file").get("name")
                     userid = json_data.get("user_id")
@@ -247,28 +247,29 @@ async def recvMsg():
                 msg = nickname + ":\n" + msg
                 url = f"{str(config.TG_API)}/bot{str(config.KEY)}/sendMessage"
                 data_send(str(url), chat_id=str(TG_ID), text=str(msg), disable_web_page_preview="true")
-        elif json_data.get("message_type") == "group":
-            uid = json_data.get("sender").get("user_id")
-            nickName = json_data.get("sender").get("nickname")
-            card = json_data.get("sender").get("card")
+       elif json_data.get("message_type") == "group":
             groupId = json_data.get("group_id")
-            msg = msgFormat(json_data.get("message"), groupid=str(groupId))
-            groupName = getGroupName(groupId)
-            nickName = str(card) if str(card) != "" else str(nickName)
-            if str(msg) != 'None' and groupId in list(config.WhiteList):
-                prt("%s: %s: %s" % (groupName, nickName, msg))
-                if str(config.MiPush) == "True":
-                    data_send(config.MiPush_API, title='%s' % groupName, content='%s:%s' % (nickName, msg), alias=config.KEY)
-                if str(config.FCM) == "True":
-                    data_send(config.FCM_API, id='%s' % config.KEY, title=str(groupName), message='%s:%s' % (nickName, msg), type='groupMsg')
-                if str(config.TG) == "True":
-                    if str(groupId) in dict(config.TG_GroupLink):
-                        TG_ID = dict(config.TG_GroupLink).get(str(groupId))
-                    else:
-                        TG_ID = str(config.TG_UID)
-                    text = nickName + "[" + groupName + "]" + ":\n" + msg
-                    url = f"{str(config.TG_API)}/bot{str(config.KEY)}/sendMessage"
-                    data_send(str(url), chat_id=str(TG_ID), text=str(text), disable_web_page_preview="true")
+            if groupId in list(config.WhiteList):
+                uid = json_data.get("sender").get("user_id")
+                nickName = json_data.get("sender").get("nickname")
+                card = json_data.get("sender").get("card")
+                msg = msgFormat(json_data.get("message"), groupid=str(groupId))
+                groupName = getGroupName(groupId)
+                nickName = str(card) if str(card) != "" else str(nickName)
+                if str(msg) != 'None':
+                    prt("%s: %s: %s" % (groupName, nickName, msg))
+                    if str(config.MiPush) == "True":
+                        data_send(config.MiPush_API, title='%s' % groupName, content='%s:%s' % (nickName, msg), alias=config.KEY)
+                    if str(config.FCM) == "True":
+                        data_send(config.FCM_API, id='%s' % config.KEY, title=str(groupName), message='%s:%s' % (nickName, msg), type='groupMsg')
+                    if str(config.TG) == "True":
+                        if str(groupId) in dict(config.TG_GroupLink):
+                            TG_ID = dict(config.TG_GroupLink).get(str(groupId))
+                        else:
+                            TG_ID = str(config.TG_UID)
+                        text = nickName + "[" + groupName + "]" + ":\n" + msg
+                        url = f"{str(config.TG_API)}/bot{str(config.KEY)}/sendMessage"
+                        data_send(str(url), chat_id=str(TG_ID), text=str(text), disable_web_page_preview="true")
     except:
         with open(str((os.path.split(os.path.realpath(__file__))[0]).replace('\\', '/')) + '/error.log', 'a', encoding='utf-8') as f:
             f.write(str(datetime.now().strftime('[%Y.%m.%d %H:%M:%S] ')) + str(traceback.format_exc()) + '\n')
