@@ -82,14 +82,15 @@ def msgFormat(msg, groupid='0'):
             msg = msg.replace(face_cqcode, emoji_name)
     if "[CQ:json" in msg:
         try:
-            data = json.loads(str(re.findall('(.*?)\[CQ:json,data=(.*?)\]', msg)[0][1]).replace('&#44;', ','))
+            data = str(re.findall('(.*?)\[CQ:json,data=(.*?)\]', msg)[0][1])
+            data = json.loads(data.replace('&#44;', ',').replace('&#91;', '[').replace('&#93;', ']'))
             view = list(data.get('meta').keys())[0]
             if 'com.tencent.miniapp' in data.get('app'):
                 mini_title = data.get('meta').get(view).get('title')
-                mini_url = data.get('meta').get(view).get('url').replace('\\', '')
+                mini_url = data.get('meta').get(view).get('url').replace('\\', '/')
                 msg = '[小程序]' + mini_title + '\n' + mini_url if str(config.TG) == "True" else '[小程序]' + mini_title
             elif 'com.tencent.structmsg' in data.get('app'):
-                jumpurl = data.get('meta').get(view).get('jumpUrl')
+                jumpurl = data.get('meta').get(view).get('jumpUrl').replace('\\', '/')
                 title = data.get('meta').get(view).get('title')
                 msg = '[分享]' + title + '\n' + jumpurl if str(config.TG) == 'True' else '[分享]' + title
             else:
