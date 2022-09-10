@@ -53,7 +53,7 @@ def msgFormat(msg, groupid='0'):
             imgurl =  re.findall('(.*?),url=(.*?)\]', imgcode)[0][1]
             msg = msg.replace(imgcode, '[图片] ' + imgurl + '\n') if str(config.TG) == "True" else msg.replace(imgcode, '[图片]')
     if '[CQ:video' in msg:
-        videourl = re.findall('(.*?)url=(.*?)\]', msg)[0][1]
+        videourl = re.findall('(.*?)url=(.*?)\]', msg)[0][1].replace('&#38;', '&')
         msg = '[视频] ' + videourl if str(config.TG) == "True" else "[视频]"
     if '[CQ:reply' in msg:
         replymsg_id = ''.join(re.findall('\[CQ:reply,id=(.*?)\]', msg))
