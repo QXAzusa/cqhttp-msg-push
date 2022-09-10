@@ -47,22 +47,22 @@ app = Flask(__name__)
 
 def msgFormat(msg, groupid='0'):
     if '[CQ:image' in msg:
-        img_cqcode = re.findall('\[CQ:image.*,url=[^\]^,]*?\]', msg)
+        img_cqcode = re.findall('\[CQ:image[^\]]*?\]', msg)
         for cqcode in img_cqcode:
-            imgurl =  re.findall('\[CQ:image.*,url=([^\]^,]*?)\]', cqcode)[0]
+            imgurl =  re.findall('\[CQ:image.*,url=([^\]]*?)\]', cqcode)[0]
             msg = msg.replace(cqcode, '[图片] ' + imgurl + '\n') if str(config.TG) == "True" else msg.replace(cqcode, '[图片]')
     if '[CQ:video' in msg:
-        videourl = re.findall('\[CQ:video.*,url=([^\]^,]*?)\]', msg)[0]
+        videourl = re.findall('\[CQ:video.*,url=([^\]]*?)\]', msg)[0]
         msg = '[视频] ' + videourl if str(config.TG) == "True" else "[视频]"
     if '[CQ:reply' in msg:
-        replymsg_id = ''.join(re.findall('\[CQ:reply,id=([^\]^,]*?)\]', msg))
+        replymsg_id = ''.join(re.findall('\[CQ:reply,id=([\-\d]*?)\]', msg))
         reply_format = replymsg(replymsg_id)
         msg = msg.replace('[CQ:reply,id=' + str(replymsg_id) + ']', reply_format)
     if '[CQ:at' in msg:
         if '[CQ:at,qq=all]' in msg:
             msg = msg.replace('[CQ:at,qq=all]', '@全体成员')
         else:
-            at_id = re.findall('\[CQ:at,qq=([^\]^,]*?)\]', msg)
+            at_id = re.findall('\[CQ:at,qq=([\d]*?)\]', msg)
             for uid in at_id:
                 at_info_api = 'http://localhost:5700/get_group_member_info?group_id=' + str(groupid) + "&user_id=" + str(uid)
                 at_info = json.loads(requests.get(at_info_api).content)
@@ -74,10 +74,10 @@ def msgFormat(msg, groupid='0'):
                     msg = 'None'
                     break
     if "[CQ:face" in msg:
-        face_idgroup = re.findall('\[CQ:face,id=([^\]^,]*?)\]', msg)
+        face_idgroup = re.findall('\[CQ:face,id=([\d]*?)\]', msg)
         for face_id in face_idgroup:
             emoji_name = getEmojiName(face_id)
-            face_cqcode = '[CQ:face,id=' + face_id + ']'
+            face_cqcode = '[CQ:face,id=' + str(face_id) + ']'
             msg = msg.replace(face_cqcode, emoji_name)
     if "[CQ:json" in msg:
         try:
