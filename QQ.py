@@ -47,105 +47,66 @@ app = Flask(__name__)
 
 def msgFormat(msg, groupid='0'):
     if '[CQ:image' in msg:
-        if str(config.TG) == "True":
-            img_cqcode = re.findall('\[CQ:image.*?]', msg)
-            for cqcode in img_cqcode:
-                imageurl = re.findall('(?<=,url=).*?(?=\?term=)', cqcode)
-                imageurl = ' '.join(imageurl)
-                renew = '[图片] ' + imageurl + '\n'
-                msg = msg.replace(cqcode, renew)
-        else:
-            img_cqcode = re.findall('\[CQ:image.*?]', msg)
-            for cqcode in img_cqcode:
-                msg = msg.replace(cqcode, '[图片]')
+        img_cqcode = re.findall('\[(.*?)\]', msg)
+        for cqcode in img_cqcode:
+            imgcode = '[' + cqcode + ']'
+            imgurl =  re.findall('(.*?),url=(.*?)\]', imgcode)[0][1]
+            msg = msg.replace(imgcode, '[图片] ' + imgurl + '\n') if str(config.TG) == "True" else msg.replace(imgcode, '[图片]')
     if '[CQ:video' in msg:
-        if str(config.TG) == "True":
-            videourl = re.findall('(?<=.url=).*?(?=,])', msg)
-            videourl = ' '.join(videourl)
-            renew = '[视频] ' + videourl
-            msg = msg.replace(msg, renew)
-        else:
-            msg = "[视频]"
+        videourl = re.findall('(.*?)url=(.*?)\]', msg)[0][1].replace('&amp;', '&')
+        msg = '[视频] ' + videourl if str(config.TG) == "True" else "[视频]"
     if '[CQ:reply' in msg:
-        reply_cqcode = re.findall('\[CQ:reply.*?]', msg)
-        reply_cqcode = ' '.join(reply_cqcode)
-        replymsg_id = re.findall('(?<=.id=).*?(?=])', reply_cqcode)
-        replymsg_id = ' '.join(replymsg_id)
+        replymsg_id = ''.join(re.findall('\[CQ:reply,id=(.*?)\]', msg))
         reply_format = replymsg(replymsg_id)
-        if str(reply_format) == 'None':
-            msg == 'None'
-        else:
-            msg = msg.replace(reply_cqcode, reply_format)
+        msg = msg.replace('[CQ:reply,id=' + str(replymsg_id) + ']', reply_format)
     if '[CQ:at' in msg:
         if '[CQ:at,qq=all]' in msg:
             msg = msg.replace('[CQ:at,qq=all]', '@全体成员')
         else:
-            at_id = re.findall('(?<=\[CQ:at,qq=).*?(?=])', str(msg))
+            at_id = re.findall('\[CQ:at,qq=(.*?)\]', msg)
             for uid in at_id:
                 at_info_api = 'http://localhost:5700/get_group_member_info?group_id=' + str(groupid) + "&user_id=" + str(uid)
                 at_info = json.loads(requests.get(at_info_api).content)
                 if str(at_info.get("data")) != 'None':
-                    if at_info.get("data").get("card") != "":
-                        at_name = "@" + str(at_info.get("data").get("card"))
-                    else:
-                        at_name = "@" + str(at_info.get("data").get("nickname"))
+                    at_name = "@" + str(at_info.get("data").get("nickname")) if at_info.get("data").get("card") == "" else "@" + str(at_info.get("data").get("card"))
                     at_cqcode = '[CQ:at,qq=' + str(uid) + ']'
                     msg = msg.replace(at_cqcode, at_name)
                 else:
                     msg = 'None'
                     break
-    if 'com.tencent.miniapp' in msg:
-        '''小程序跳转链接'''
-        mini_jumpurl = re.findall('(?<="qqdocurl":").*?(?=")', msg)
-        mini_jumpurl = ' '.join(mini_jumpurl)
-        mini_jumpurl = mini_jumpurl.replace('\\', '')
-        '''小程序标题'''
-        mini_imf = re.findall('{"appType":.*?}', msg)
-        mini_imf = ' '.join(mini_imf)
-        mini_tittle = re.findall('(?<="desc":").*?(?=")', mini_imf)
-        mini_tittle = ' '.join(mini_tittle)
-        '''小程序归属'''
-        mini_from = re.findall('(?<="title":").*?(?=")', msg)
-        mini_from = ' '.join(mini_from)
-        if str(config.TG) == "True":
-            msg = '[小程序] ' + mini_from + '\n' + mini_tittle + '\n' + mini_jumpurl
-        else:
-            msg = '[小程序] ' + mini_from + '\n' + mini_tittle
-    if 'com.tencent.structmsg' in msg:
-        jumpurl = re.findall('(?<="jumpUrl":").*?(?="&)',msg)
-        jumpurl = ' '.join(jumpurl)
-        jumpurl = jumpurl.replace('\\','')
-        tittle = re.findall(r'(?<="title":").*?(?="&)',msg)
-        tittle = ' '.join(tittle)
-        if str(config.TG) == 'True':
-            msg = tittle + '\n' + jumpurl
-        else:
-            msg = tittle
-    if "CQ:face" in msg:
-        face_idgroup = re.findall('(?<=CQ:face,id=).*?(?=\])', msg)
+    if "[CQ:face" in msg:
+        face_idgroup = re.findall('\[CQ:face,id=(.*?)\]', msg)
         for face_id in face_idgroup:
             emoji_name = getEmojiName(face_id)
-            emoji_name = f'[{emoji_name}]'
-            regex = '\[CQ:face,id=' + face_id + ']'
-            face_cqcode = re.findall(regex, msg)
-            for cqcode in face_cqcode:
-                msg = msg.replace(cqcode, emoji_name)
-    if "CQ:record" in msg:
+            face_cqcode = '[CQ:face,id=' + face_id + ']'
+            msg = msg.replace(face_cqcode, emoji_name)
+    if "[CQ:json" in msg:
+        data = json.loads(str(re.findall('(.*?)\[CQ:json,data=(.*?)\]', msg)[0][1]).replace('&#44;', ','))
+        view = list(data.get('meta').keys())[0]
+        if 'com.tencent.miniapp' in data.get('app'):
+            mini_title = data.get('meta').get(view).get('title')
+            mini_url = data.get('meta').get(view).get('url').replace('\\', '')
+            msg = '[小程序]' + mini_title + '\n' + mini_url if str(config.TG) == "True" else '[小程序]' + mini_title
+        elif 'com.tencent.structmsg' in data.get('app'):
+            jumpurl = data.get('meta').get(view).get('jumpUrl')
+            title = data.get('meta').get(view).get('title')
+            msg = '[分享]' + title + '\n' + jumpurl if str(config.TG) == 'True' else '[分享]' + title
+        else:
+            msg = '[卡片消息]'
+    if "[CQ:record" in msg:
         msg = "[语音]"
-    if "CQ:share" in msg:
+    if "[CQ:share" in msg:
         msg = "[链接]"
-    if "CQ:music" in msg:
+    if "[CQ:music" in msg:
         msg = "[音乐分享]"
-    if "CQ:redbag" in msg:
+    if "[CQ:redbag" in msg:
         msg = "[红包]"
-    if "CQ:forward" in msg:
+    if "[CQ:forward" in msg:
         msg = "[合并转发]"
-    if "CQ:json" in msg:
+    if "[CQ:xml" in msg:
         msg = '[卡片消息]'
-    if "CQ:xml" in msg:
-        msg = '[卡片消息]'
-    if "戳一戳" in msg:
-        msg = "戳了你一下"
+    if "&#91;戳一戳&#93;请使用最新版手机QQ体验新功能。" in msg:
+        msg = "[戳一戳]"
     msg = html.unescape(msg)
     return msg
 
@@ -153,8 +114,8 @@ def msgFormat(msg, groupid='0'):
 def getGroupName(groupId):
     length = len(groupInfo.get("data"))
     for i in range(length):
-        if groupId == groupInfo.get("data")[i].get("group_id"):
-            return groupInfo.get("data")[i].get("group_name")
+        if groupId == groupInfo["data"][i]["group_id"]:
+            return groupInfo["data"][i]["group_name"]
 
 
 def getnickname(id):
@@ -173,11 +134,8 @@ def getfriendmark(UID):
     name = 'None'
     length = len(friendInfo.get("data"))
     for i in range(length):
-        if UID == friendInfo.get("data")[i].get("user_id"):
-            if friendInfo.get("data")[i].get("remark") != '':
-                name = friendInfo.get("data")[i].get("remark")
-            else:
-                name = friendInfo.get("data")[i].get("nickname")
+        if UID == friendInfo["data"][i]["user_id"]:
+            name = friendInfo["data"][i]["remark"] if friendInfo["data"][i]["remark"] != '' else friendInfo["data"][i]["nickname"]
             break
     if name == 'None':
         name = getnickname(UID) or "未知"
@@ -208,26 +166,24 @@ def replymsg(msgid):
         replymsg_sender = replymsg_json.get("data").get("sender").get("nickname")
         replymsg_timestamp = replymsg_json.get("data").get("time")
         replymsg_styletime = styletime(replymsg_timestamp)
-        if str(config.TG) == "True":
-            replymsg = "[回复：" + replymsg_sender + "(" + replymsg_styletime + "): " + replymsg + "]\n"
-        else:
-            replymsg = f"回复 {replymsg_sender}的消息: "
+        reply_msg = "[回复" + replymsg_sender + "(" + replymsg_styletime + "): " + replymsg + "]\n" if str(config.TG) == "True" else f"[回复{replymsg_sender}的消息]"
     else:
-        replymsg = 'None'
-    return replymsg
+        reply_msg = '[消息回复]'
+    return reply_msg
 
 
 def getEmojiName(face_id):
-    face_name = '表情'
+    face_name = '[表情]'
     for i in range(0, len_face):
-        if face_data.get("sysface")[i].get('QSid') == face_id:
-            QDes = face_data.get('sysface')[i].get('QDes')
-            face_name = QDes.replace('/','')
+        QSid = face_data['sysface'][i]['QSid']
+        QDes = face_data['sysface'][i]['QDes']
+        if QSid == face_id:            
+            face_name = '[' + QDes.replace('/','') + ']'
             break
     return face_name
 
 
-@app.route("/",methods=['GET', 'POST'])
+@app.route("/", methods=['GET', 'POST'])
 async def recvMsg():
     global TG_ID, groupId
     groupId = ''
@@ -322,4 +278,4 @@ if __name__ == '__main__':
     urllib3.disable_warnings()
     errorlog_clean = open(str((os.path.split(os.path.realpath(__file__))[0]).replace('\\', '/')) + '/error.log', 'w').close()
     prt('程序开始运行')
-    app.run(host="127.0.0.1",port=5000)
+    app.run(host="127.0.0.1", port=5000)
