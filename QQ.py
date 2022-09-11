@@ -63,11 +63,12 @@ def msgFormat(msg, groupid='0'):
             reply_format = replymsg(replymsg_id)
             msg = msg.replace(cqcode, reply_format)
     if '[CQ:at' in msg:
-        if '[CQ:at,qq=all]' in msg:
-            msg = msg.replace('[CQ:at,qq=all]', '@全体成员')
         at_cqcode = re.findall('\[CQ:at[^\]]*\]', msg)
         for cqcode in at_cqcode:
             uid = re.findall('.*,qq=([^(\]|,|\s)]*).*', cqcode)[0]
+            if str(uid) == 'all':
+                msg = msg.replace('[CQ:at,qq=all]', '@全体成员')
+                continue
             at_info_api = 'http://localhost:5700/get_group_member_info?group_id=' + str(groupid) + "&user_id=" + str(uid)
             at_info = json.loads(requests.get(at_info_api).content)
             if str(at_info.get("data")) != 'None':
