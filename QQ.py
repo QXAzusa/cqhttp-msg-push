@@ -251,7 +251,7 @@ async def recvMsg():
                 msg = nickname + ":\n" + msg
                 url = f"{str(config.TG_API)}/bot{str(config.KEY)}/sendMessage"
                 data_send(str(url), chat_id=str(TG_ID), text=str(msg), disable_web_page_preview="true")
-       elif json_data.get("message_type") == "group":
+        elif json_data.get("message_type") == "group":
             groupId = json_data.get("group_id")
             if groupId in list(config.WhiteList):
                 uid = json_data.get("sender").get("user_id")
