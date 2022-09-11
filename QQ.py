@@ -78,8 +78,8 @@ def msgFormat(msg, groupid='0'):
                 msg = 'None'
                 break
     if "[CQ:face" in msg:
-        facecqcode = re.findall('\[CQ:face[^\]]*\]', msg)
-        for cqcode in facecqcode:
+        face_cqcode = re.findall('\[CQ:face[^\]]*\]', msg)
+        for cqcode in face_cqcode:
             face_id = re.findall('.*,id=([^(\]|,|\s)]*).*', cqcode)[0]
             emoji_name = getEmojiName(face_id)
             msg = msg.replace(cqcode, emoji_name)
