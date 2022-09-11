@@ -47,38 +47,42 @@ app = Flask(__name__)
 
 def msgFormat(msg, groupid='0'):
     if '[CQ:image' in msg:
-        img_cqcode = re.findall('\[CQ:image[^\]]*?\]', msg)
+        img_cqcode = re.findall('\[CQ:image[^\]]*\]', msg)
         for cqcode in img_cqcode:
-            imgurl =  re.findall('\[CQ:image.*,url=([^\]]*?)\]', cqcode)[0]
+            imgurl =  re.findall('.*,url=([^(\]|,|\s)]*).*', cqcode)[0]
             msg = msg.replace(cqcode, '[图片] ' + imgurl + '\n') if str(config.TG) == "True" else msg.replace(cqcode, '[图片]')
     if '[CQ:video' in msg:
-        videourl = re.findall('\[CQ:video.*,url=([^\]]*?)\]', msg)[0]
-        msg = '[视频] ' + videourl if str(config.TG) == "True" else "[视频]"
+        video_cqcode = re.findall('\[CQ:video[^\]]*\]', msg)
+        for cqcode in video_cqcode:
+            videourl = re.findall('.*,url=([^(\]|,|\s)]*).*', cqcode)[0]
+            msg = msg.replace(cqcode, '[视频] ' + videourl + '\n') if str(config.TG) == "True" else msg.replace(cqcode, '[视频]')
     if '[CQ:reply' in msg:
-        replymsg_id = re.findall('\[CQ:reply,id=([\-\d]*?)\]', msg)[0]
-        reply_format = replymsg(replymsg_id)
-        msg = msg.replace('[CQ:reply,id=' + str(replymsg_id) + ']', reply_format)
+        reply_cqcode = re.findall('\[CQ:reply[^\]]*\]', msg)
+        for cqcode in reply_cqcode:
+            replymsg_id = re.findall('.*,id=([^(\]|,|\s)]*).*', cqcode)[0]
+            reply_format = replymsg(replymsg_id)
+            msg = msg.replace(cqcode, reply_format)
     if '[CQ:at' in msg:
         if '[CQ:at,qq=all]' in msg:
             msg = msg.replace('[CQ:at,qq=all]', '@全体成员')
-        else:
-            at_id = re.findall('\[CQ:at,qq=([\d]*?)\]', msg)
-            for uid in at_id:
-                at_info_api = 'http://localhost:5700/get_group_member_info?group_id=' + str(groupid) + "&user_id=" + str(uid)
-                at_info = json.loads(requests.get(at_info_api).content)
-                if str(at_info.get("data")) != 'None':
-                    at_name = "@" + str(at_info.get("data").get("nickname")) if at_info.get("data").get("card") == "" else "@" + str(at_info.get("data").get("card"))
-                    at_cqcode = '[CQ:at,qq=' + str(uid) + ']'
-                    msg = msg.replace(at_cqcode, at_name)
-                else:
-                    msg = 'None'
-                    break
+        at_cqcode = re.findall('\[CQ:at[^\]]*\]', msg)
+        for cqcode in at_cqcode:
+            uid = re.findall('.*,qq=([^(\]|,|\s)]*).*', cqcode)[0]
+            at_info_api = 'http://localhost:5700/get_group_member_info?group_id=' + str(groupid) + "&user_id=" + str(uid)
+            at_info = json.loads(requests.get(at_info_api).content)
+            if str(at_info.get("data")) != 'None':
+                at_name = "@" + str(at_info.get("data").get("nickname")) if at_info.get("data").get("card") == "" else "@" + str(at_info.get("data").get("card"))
+                at_cqcode = '[CQ:at,qq=' + str(uid) + ']'
+                msg = msg.replace(at_cqcode, at_name)
+            else:
+                msg = 'None'
+                break
     if "[CQ:face" in msg:
-        face_idgroup = re.findall('\[CQ:face,id=([\d]*?)\]', msg)
-        for face_id in face_idgroup:
+        face_cqcode = re.findall('\[CQ:face[^\]]*\]', msg)
+        for cqcode in face_cqcode:
+            face_id = re.findall('.*,id=([^(\]|,|\s)]*).*', cqcode)[0]
             emoji_name = getEmojiName(face_id)
-            face_cqcode = '[CQ:face,id=' + str(face_id) + ']'
-            msg = msg.replace(face_cqcode, emoji_name)
+            msg = msg.replace(cqcode, emoji_name)
     if "[CQ:json" in msg:
         try:
             data = json.loads(html.unescape(re.findall('\[CQ:json,data=(.*?)\]', msg)[0]))
@@ -152,11 +156,11 @@ def data_send(url, **kwargs):
                 raise RuntimeError
         except:
             if str(i) == '4':
-                print(str(datetime.now().strftime('[%Y.%m.%d %H:%M:%S] ')) + '连续三次向接口发送数据超时/失败，可能是网络问题或接口失效，终止发送')
+                prt('连续三次向接口发送数据超时/失败，可能是网络问题或接口失效，终止发送')
                 break
-            print(str(datetime.now().strftime('[%Y.%m.%d %H:%M:%S] ')) + '向接口发送数据超时/失败，第' + str(i) + '次重试')
+            prt('向接口发送数据超时/失败，第' + str(i) + '次重试')
         else:
-            print(str(datetime.now().strftime('[%Y.%m.%d %H:%M:%S] ')) + '成功向接口发送数据↑')
+            prt('成功向接口发送数据↑')
             break
 
 
