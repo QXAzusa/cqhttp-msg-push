@@ -156,11 +156,11 @@ def data_send(url, **kwargs):
                 raise RuntimeError
         except:
             if str(i) == '4':
-                print(str(datetime.now().strftime('[%Y.%m.%d %H:%M:%S] ')) + '连续三次向接口发送数据超时/失败，可能是网络问题或接口失效，终止发送')
+                prt('连续三次向接口发送数据超时/失败，可能是网络问题或接口失效，终止发送')
                 break
-            print(str(datetime.now().strftime('[%Y.%m.%d %H:%M:%S] ')) + '向接口发送数据超时/失败，第' + str(i) + '次重试')
+            prt('向接口发送数据超时/失败，第' + str(i) + '次重试')
         else:
-            print(str(datetime.now().strftime('[%Y.%m.%d %H:%M:%S] ')) + '成功向接口发送数据↑')
+            prt('成功向接口发送数据↑')
             break
 
 
