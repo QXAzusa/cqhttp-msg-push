@@ -47,23 +47,22 @@ app = Flask(__name__)
 
 def msgFormat(msg, groupid='0'):
     if '[CQ:image' in msg:
-        img_cqcode = re.findall('\[(.*?)\]', msg)
+        img_cqcode = re.findall('\[CQ:image[^\]]*?\]', msg)
         for cqcode in img_cqcode:
-            imgcode = '[' + cqcode + ']'
-            imgurl =  re.findall('(.*?),url=(.*?)\]', imgcode)[0][1]
-            msg = msg.replace(imgcode, '[图片] ' + imgurl + '\n') if str(config.TG) == "True" else msg.replace(imgcode, '[图片]')
+            imgurl =  re.findall('\[CQ:image.*,url=([^\]]*?)\]', cqcode)[0]
+            msg = msg.replace(cqcode, '[图片] ' + imgurl + '\n') if str(config.TG) == "True" else msg.replace(cqcode, '[图片]')
     if '[CQ:video' in msg:
-        videourl = re.findall('(.*?)url=(.*?)\]', msg)[0][1].replace('&amp;', '&')
+        videourl = re.findall('\[CQ:video.*,url=([^\]]*?)\]', msg)[0]
         msg = '[视频] ' + videourl if str(config.TG) == "True" else "[视频]"
     if '[CQ:reply' in msg:
-        replymsg_id = ''.join(re.findall('\[CQ:reply,id=(.*?)\]', msg))
+        replymsg_id = re.findall('\[CQ:reply,id=([\-\d]*?)\]', msg)[0]
         reply_format = replymsg(replymsg_id)
         msg = msg.replace('[CQ:reply,id=' + str(replymsg_id) + ']', reply_format)
     if '[CQ:at' in msg:
         if '[CQ:at,qq=all]' in msg:
             msg = msg.replace('[CQ:at,qq=all]', '@全体成员')
         else:
-            at_id = re.findall('\[CQ:at,qq=(.*?)\]', msg)
+            at_id = re.findall('\[CQ:at,qq=([\d]*?)\]', msg)
             for uid in at_id:
                 at_info_api = 'http://localhost:5700/get_group_member_info?group_id=' + str(groupid) + "&user_id=" + str(uid)
                 at_info = json.loads(requests.get(at_info_api).content)
@@ -75,15 +74,14 @@ def msgFormat(msg, groupid='0'):
                     msg = 'None'
                     break
     if "[CQ:face" in msg:
-        face_idgroup = re.findall('\[CQ:face,id=(.*?)\]', msg)
+        face_idgroup = re.findall('\[CQ:face,id=([\d]*?)\]', msg)
         for face_id in face_idgroup:
             emoji_name = getEmojiName(face_id)
-            face_cqcode = '[CQ:face,id=' + face_id + ']'
+            face_cqcode = '[CQ:face,id=' + str(face_id) + ']'
             msg = msg.replace(face_cqcode, emoji_name)
     if "[CQ:json" in msg:
         try:
-            data = str(re.findall('(.*?)\[CQ:json,data=(.*?)\]', msg)[0][1])
-            data = json.loads(data.replace('&#44;', ',').replace('&#91;', '[').replace('&#93;', ']'))
+            data = json.loads(html.unescape(re.findall('\[CQ:json,data=(.*?)\]', msg)[0]))
             view = list(data.get('meta').keys())[0]
             if 'com.tencent.miniapp' in data.get('app'):
                 mini_title = data.get('meta').get(view).get('title')
@@ -210,8 +208,8 @@ async def recvMsg():
                     data_send(str(url), chat_id=str(TG_ID), text=str(msg), disable_web_page_preview="true")
         elif json_data.get("post_type") == "notice":
             if json_data.get("notice_type") == "group_upload":
-                if json_data.get("group_id") in list(config.WhiteList):
-                    groupId = json_data.get("group_id")
+                groupId = json_data.get("group_id")
+                if groupId in list(config.WhiteList):
                     groupName = getGroupName(groupId)
                     filename = json_data.get("file").get("name")
                     userid = json_data.get("user_id")
@@ -249,28 +247,29 @@ async def recvMsg():
                 msg = nickname + ":\n" + msg
                 url = f"{str(config.TG_API)}/bot{str(config.KEY)}/sendMessage"
                 data_send(str(url), chat_id=str(TG_ID), text=str(msg), disable_web_page_preview="true")
-        elif json_data.get("message_type") == "group":
-            uid = json_data.get("sender").get("user_id")
-            nickName = json_data.get("sender").get("nickname")
-            card = json_data.get("sender").get("card")
+       elif json_data.get("message_type") == "group":
             groupId = json_data.get("group_id")
-            msg = msgFormat(json_data.get("message"), groupid=str(groupId))
-            groupName = getGroupName(groupId)
-            nickName = str(card) if str(card) != "" else str(nickName)
-            if str(msg) != 'None' and groupId in list(config.WhiteList):
-                prt("%s: %s: %s" % (groupName, nickName, msg))
-                if str(config.MiPush) == "True":
-                    data_send(config.MiPush_API, title='%s' % groupName, content='%s:%s' % (nickName, msg), alias=config.KEY)
-                if str(config.FCM) == "True":
-                    data_send(config.FCM_API, id='%s' % config.KEY, title=str(groupName), message='%s:%s' % (nickName, msg), type='groupMsg')
-                if str(config.TG) == "True":
-                    if str(groupId) in dict(config.TG_GroupLink):
-                        TG_ID = dict(config.TG_GroupLink).get(str(groupId))
-                    else:
-                        TG_ID = str(config.TG_UID)
-                    text = nickName + "[" + groupName + "]" + ":\n" + msg
-                    url = f"{str(config.TG_API)}/bot{str(config.KEY)}/sendMessage"
-                    data_send(str(url), chat_id=str(TG_ID), text=str(text), disable_web_page_preview="true")
+            if groupId in list(config.WhiteList):
+                uid = json_data.get("sender").get("user_id")
+                nickName = json_data.get("sender").get("nickname")
+                card = json_data.get("sender").get("card")
+                msg = msgFormat(json_data.get("message"), groupid=str(groupId))
+                groupName = getGroupName(groupId)
+                nickName = str(card) if str(card) != "" else str(nickName)
+                if str(msg) != 'None':
+                    prt("%s: %s: %s" % (groupName, nickName, msg))
+                    if str(config.MiPush) == "True":
+                        data_send(config.MiPush_API, title='%s' % groupName, content='%s:%s' % (nickName, msg), alias=config.KEY)
+                    if str(config.FCM) == "True":
+                        data_send(config.FCM_API, id='%s' % config.KEY, title=str(groupName), message='%s:%s' % (nickName, msg), type='groupMsg')
+                    if str(config.TG) == "True":
+                        if str(groupId) in dict(config.TG_GroupLink):
+                            TG_ID = dict(config.TG_GroupLink).get(str(groupId))
+                        else:
+                            TG_ID = str(config.TG_UID)
+                        text = nickName + "[" + groupName + "]" + ":\n" + msg
+                        url = f"{str(config.TG_API)}/bot{str(config.KEY)}/sendMessage"
+                        data_send(str(url), chat_id=str(TG_ID), text=str(text), disable_web_page_preview="true")
     except:
         with open(str((os.path.split(os.path.realpath(__file__))[0]).replace('\\', '/')) + '/error.log', 'a', encoding='utf-8') as f:
             f.write(str(datetime.now().strftime('[%Y.%m.%d %H:%M:%S] ')) + str(traceback.format_exc()) + '\n')
