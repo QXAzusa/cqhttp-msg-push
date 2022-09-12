@@ -46,6 +46,12 @@ app = Flask(__name__)
 
 
 def msgFormat(msg, groupid='0'):
+    if '[CQ:reply' in msg:
+        reply_cqcode = re.findall('\[CQ:reply[^\]]*\]', msg)
+        for cqcode in list(set(reply_cqcode)):
+            replymsg_id = re.findall('.*,id=([^(\]|,|\s)]*).*', cqcode)[0]
+            reply_format = replymsg(replymsg_id)
+            msg = msg.replace(cqcode, reply_format)
     if '[CQ:image' in msg:
         img_cqcode = re.findall('\[CQ:image[^\]]*\]', msg)
         for cqcode in list(set(img_cqcode)):
@@ -56,12 +62,6 @@ def msgFormat(msg, groupid='0'):
         for cqcode in list(set(video_cqcode)):
             videourl = re.findall('.*,url=([^(\]|,|\s)]*).*', cqcode)[0]
             msg = msg.replace(cqcode, '[视频] ' + videourl + '\n') if str(config.TG) == "True" else msg.replace(cqcode, '[视频]')
-    if '[CQ:reply' in msg:
-        reply_cqcode = re.findall('\[CQ:reply[^\]]*\]', msg)
-        for cqcode in list(set(reply_cqcode)):
-            replymsg_id = re.findall('.*,id=([^(\]|,|\s)]*).*', cqcode)[0]
-            reply_format = replymsg(replymsg_id)
-            msg = msg.replace(cqcode, reply_format)
     if '[CQ:at' in msg:
         at_cqcode = re.findall('\[CQ:at[^\]]*\]', msg)
         for cqcode in list(set(at_cqcode)):
