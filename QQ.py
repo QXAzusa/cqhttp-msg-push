@@ -263,7 +263,7 @@ async def recvMsg():
         elif json_data.get("post_type") == "notice":
             if json_data.get("notice_type") == "group_upload":
                 groupId = json_data.get("group_id")
-                if groupId in list(value.get('WhiteList')):
+                if int(groupId) in list(value.get('WhiteList')):
                     groupName = getGroupName(groupId)
                     filename = json_data.get("file").get("name")
                     userid = json_data.get("user_id")
@@ -305,7 +305,7 @@ async def recvMsg():
                 data_send(str(url), chat_id=str(TG_ID), text=str(msg), disable_web_page_preview="true")
         elif json_data.get("message_type") == "group":
             groupId = json_data.get("group_id")
-            if groupId in list(value.get('WhiteList')):
+            if int(groupId) in list(value.get('WhiteList')):
                 uid = json_data.get("sender").get("user_id")
                 nickName = json_data.get("sender").get("nickname")
                 card = json_data.get("sender").get("card")
