@@ -48,26 +48,27 @@ app = Flask(__name__)
 def msgFormat(msg, groupid='0'):
     if '[CQ:image' in msg:
         img_cqcode = re.findall('\[CQ:image[^\]]*\]', msg)
-        for cqcode in img_cqcode:
+        for cqcode in list(set(img_cqcode)):
             imgurl =  re.findall('.*,url=([^(\]|,|\s)]*).*', cqcode)[0]
             msg = msg.replace(cqcode, '[图片] ' + imgurl + '\n') if str(config.TG) == "True" else msg.replace(cqcode, '[图片]')
     if '[CQ:video' in msg:
         video_cqcode = re.findall('\[CQ:video[^\]]*\]', msg)
-        for cqcode in video_cqcode:
+        for cqcode in list(set(video_cqcode)):
             videourl = re.findall('.*,url=([^(\]|,|\s)]*).*', cqcode)[0]
             msg = msg.replace(cqcode, '[视频] ' + videourl + '\n') if str(config.TG) == "True" else msg.replace(cqcode, '[视频]')
     if '[CQ:reply' in msg:
         reply_cqcode = re.findall('\[CQ:reply[^\]]*\]', msg)
-        for cqcode in reply_cqcode:
+        for cqcode in list(set(reply_cqcode)):
             replymsg_id = re.findall('.*,id=([^(\]|,|\s)]*).*', cqcode)[0]
             reply_format = replymsg(replymsg_id)
             msg = msg.replace(cqcode, reply_format)
     if '[CQ:at' in msg:
-        if '[CQ:at,qq=all]' in msg:
-            msg = msg.replace('[CQ:at,qq=all]', '@全体成员')
         at_cqcode = re.findall('\[CQ:at[^\]]*\]', msg)
-        for cqcode in at_cqcode:
+        for cqcode in list(set(at_cqcode)):
             uid = re.findall('.*,qq=([^(\]|,|\s)]*).*', cqcode)[0]
+            if str(uid) == 'all':
+                msg = msg.replace(cqcode, '@全体成员')
+                continue
             at_info_api = 'http://localhost:5700/get_group_member_info?group_id=' + str(groupid) + "&user_id=" + str(uid)
             at_info = json.loads(requests.get(at_info_api).content)
             if str(at_info.get("data")) != 'None':
@@ -79,7 +80,7 @@ def msgFormat(msg, groupid='0'):
                 break
     if "[CQ:face" in msg:
         face_cqcode = re.findall('\[CQ:face[^\]]*\]', msg)
-        for cqcode in face_cqcode:
+        for cqcode in list(set(face_cqcode)):
             face_id = re.findall('.*,id=([^(\]|,|\s)]*).*', cqcode)[0]
             emoji_name = getEmojiName(face_id)
             msg = msg.replace(cqcode, emoji_name)
