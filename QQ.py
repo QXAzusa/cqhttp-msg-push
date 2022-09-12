@@ -86,7 +86,7 @@ def msgFormat(msg, groupid='0'):
             msg = msg.replace(cqcode, emoji_name)
     if "[CQ:json" in msg:
         try:
-            data = json.loads(html.unescape(re.findall('\[CQ:json,data=(.*?)\]', msg)[0]))
+            data = json.loads(html.unescape(re.findall('\[CQ:json,data=([^\]]*?)\]', msg)[0]))
             view = list(data.get('meta').keys())[0]
             if 'com.tencent.miniapp' in data.get('app'):
                 mini_title = data.get('meta').get(view).get('title')
