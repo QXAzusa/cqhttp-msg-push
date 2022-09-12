@@ -16,44 +16,37 @@ from flask import Flask,request
 from datetime import datetime
 from multiprocessing import Process, Manager
 
-log = logging.getLogger('werkzeug')
-log.setLevel(logging.ERROR)
-
-pid = os.getpid()
+local_dir = str((os.path.split(os.path.realpath(__file__))[0]).replace('\\', '/'))
+errorlog_clean = open(local_dir + '/error.log', 'w').close()
+app = Flask(__name__)
 ppid = os.getppid()
-
-errorlog_clean = open(str((os.path.split(os.path.realpath(__file__))[0]).replace('\\', '/')) + '/error.log', 'w').close()
+pid = os.getpid()
 
 
 def prt(mes):
     print(str(datetime.now().strftime('[%Y.%m.%d %H:%M:%S] ')) + str(mes))
 
 
-def error(pid, ppid):
-    system = str(platform.system())
-    print(str(datetime.now().strftime('[%Y.%m.%d %H:%M:%S] ')) + '程序运行出现错误，终止运行，错误信息已保存至程序目录下的error.log文件中')
-    with open(str((os.path.split(os.path.realpath(__file__))[0]).replace('\\', '/')) + '/error.log', 'a', encoding='utf-8') as f:
+def error_log(local):
+    with open(local + '/error.log', 'a', encoding='utf-8') as f:
         f.write(str(datetime.now().strftime('[%Y.%m.%d %H:%M:%S] ')) + str(traceback.format_exc()) + '\n')
-    if system == 'Linux':
-        os.killpg(os.getpgid(int(pid)), signal.SIGTERM)
-    elif system == 'Windows':
-        os.system('taskkill /F /T /PID ' + str(pid))
-    else:
-        os.kill(int(ppid), signal.SIGTERM)
+    prt('程序运行出现错误,错误信息已保存至程序目录下的error.log文件中')
 
 
 try:
     import config
 except:
-    prt("读取配置文件异常,请检查配置文件是否存在或语法是否有问题")
-    error(pid, ppid)
+    prt("读取配置文件异常,程序终止运行,请检查配置文件是否存在或语法是否有问题")
+    error_log(local_dir)
+    os._exit(0)
 
 try:
-    with open(str((os.path.split(os.path.realpath(__file__))[0]).replace('\\', '/')) + '/face_config.json', 'r', encoding='utf-8') as f:
+    with open(local_dir + '/face_config.json', 'r', encoding='utf-8') as f:
         face_data = json.load(f)
     len_face = len(face_data.get("sysface"))
 except:
-    prt("读取表情包配置文件异常,请检查配置文件是否存在或语法是否有问题")
+    prt("读取表情包配置文件异常,程序终止运行,请检查配置文件是否存在或语法是否有问题")
+    error_log(local_dir)
     os._exit(0)
 
 try:
@@ -61,10 +54,9 @@ try:
     friendInfo = json.loads(requests.get("http://localhost:5700/get_friend_list").text)
     userId = json.loads(requests.get("http://localhost:5700/get_login_info").text).get("data").get("user_id")
 except:
-    prt("无法从go-cqhttp获取信息,请检查go-cqhttp是否运行或端口配置是否正确")
+    prt("无法从go-cqhttp获取信息,程序终止运行,请检查go-cqhttp是否运行或端口配置是否正确")
+    error_log(local_dir)
     os._exit(0)
-
-app = Flask(__name__)
 
 
 def msgFormat(msg, groupid='0'):
@@ -140,18 +132,30 @@ def msgFormat(msg, groupid='0'):
     return msg
 
 
+def error(pid, ppid, errorlog_dir):
+    error_log(errorlog_dir)
+    prt('程序终止运行')
+    system = str(platform.system())
+    if system == 'Linux':
+        os.killpg(os.getpgid(int(pid)), signal.SIGTERM)
+    elif system == 'Windows':
+        os.system('taskkill /F /T /PID ' + str(pid))
+    else:
+        os.kill(int(ppid), signal.SIGTERM)
+
+
 def config_update(value):
     try:
         while 1:
             try:
                 importlib.reload(config)
             except:
-                print(str(datetime.now().strftime('[%Y.%m.%d %H:%M:%S] ')) + '配置获取异常,请检查配置文件是否存在/权限是否正确/语法是否有误')
-                error(value.get('pid'), value.get('ppid'))
+                prt('读取配置文件异常,请检查配置文件是否存在或语法是否有问题')
+                error(value.get('pid'), value.get('ppid'), value.get('local_dir'))
                 break
             newcfg = {'MiPush': str(config.MiPush), 'FCM': str(config.FCM), 'TG': str(config.TG), 'KEY': str(config.KEY),
-                    'WhiteList': list(config.WhiteList), 'TG_UID': str(config.TG_UID), 'TG_GroupLink': str(config.TG_GroupLink),
-                    'MiPush_API': str(config.MiPush_API), 'FCM_API': str(config.FCM_API), 'TG_API': str(config.TG_API)}
+                        'WhiteList': list(config.WhiteList), 'TG_UID': str(config.TG_UID), 'TG_GroupLink': str(config.TG_GroupLink),
+                        'MiPush_API': str(config.MiPush_API), 'FCM_API': str(config.FCM_API), 'TG_API': str(config.TG_API)}
             for i in newcfg.keys():
                 if str(value.get(i)) != str(newcfg.get(i)):
                     prt(str(i) + '更改,新' + str(i) + '值为' + str(newcfg.get(i)))
@@ -160,7 +164,7 @@ def config_update(value):
     except KeyboardInterrupt:
         pass
     except:
-        error(value.get('pid'), value.get('ppid'))
+        error(value.get('pid'), value.get('ppid'), value.get('local_dir'))
 
 
 def getGroupName(groupId):
@@ -323,21 +327,27 @@ async def recvMsg():
                         url = f"{str(value.get('TG_API'))}/bot{str(value.get('KEY'))}/sendMessage"
                         data_send(str(url), chat_id=str(TG_ID), text=str(text), disable_web_page_preview="true")
     except:
-        with open(str((os.path.split(os.path.realpath(__file__))[0]).replace('\\', '/')) + '/error.log', 'a', encoding='utf-8') as f:
-            f.write(str(datetime.now().strftime('[%Y.%m.%d %H:%M:%S] ')) + str(traceback.format_exc()) + '\n')
-        prt('发生错误，错误信息已保存到error.log')
+        error_log(local_dir)
     return "200 OK"
 
 
 if __name__ == '__main__':
-    urllib3.disable_warnings()
-    prt('程序开始运行')
-    value = Manager().dict()
-    value.update({'pid': str(pid), 'ppid': str(ppid), 'MiPush': str(config.MiPush),'FCM': str(config.FCM),
-                    'TG': str(config.TG),'KEY': str(config.KEY), 'WhiteList': list(config.WhiteList),
-                    'TG_UID': str(config.TG_UID), 'TG_GroupLink': str(config.TG_GroupLink),
-                    'MiPush_API': str(config.MiPush_API), 'FCM_API': str(config.FCM_API), 'TG_API': str(config.TG_API)})
-    conf_update = Process(target=config_update, args=(value, ))
-    conf_update.daemon = True
-    conf_update.start()
-    app.run(host="127.0.0.1", port=5000)
+    try:
+        log = logging.getLogger('werkzeug')
+        log.setLevel(logging.ERROR)
+        urllib3.disable_warnings()
+        prt('程序开始运行')
+        value = Manager().dict()
+        value.update({'pid': str(pid), 'ppid': str(ppid),'local_dir': str(local_dir), 'MiPush': str(config.MiPush),
+                        'FCM': str(config.FCM), 'TG': str(config.TG),'KEY': str(config.KEY),
+                        'WhiteList': list(config.WhiteList), 'TG_UID': str(config.TG_UID),
+                        'TG_GroupLink': str(config.TG_GroupLink), 'MiPush_API': str(config.MiPush_API),
+                        'FCM_API': str(config.FCM_API), 'TG_API': str(config.TG_API)})
+        conf_update = Process(target=config_update, args=(value, ))
+        conf_update.daemon = True
+        conf_update.start()
+        app.run(host="127.0.0.1", port=5000)
+    except KeyboardInterrupt:
+        prt('由于键盘输入^C（ctrl+C），程序强制停止运行')
+    except:
+        error(pid, ppid, local_dir)
