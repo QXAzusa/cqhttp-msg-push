@@ -162,7 +162,7 @@ def config_update(value):
             value.update(newcfg)
             time.sleep(1)
     except KeyboardInterrupt:
-        pass
+        prt('由于触发了KeyboardInterrupt(同时按下了Ctrl+C等情况)，程序强制停止运行')
     except:
         error(value.get('pid'), value.get('ppid'), value.get('local_dir'))
 
@@ -348,6 +348,6 @@ if __name__ == '__main__':
         conf_update.start()
         app.run(host="127.0.0.1", port=5000)
     except KeyboardInterrupt:
-        prt('由于键盘输入^C（ctrl+C），程序强制停止运行')
+        prt('由于触发了KeyboardInterrupt(同时按下了Ctrl+C等情况)，程序强制停止运行')
     except:
         error(pid, ppid, local_dir)
