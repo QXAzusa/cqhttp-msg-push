@@ -8,23 +8,45 @@ import os
 import time
 import logging
 import traceback
+import importlib
+import signal
+import platform
 from requests.packages import urllib3
 from flask import Flask,request
 from datetime import datetime
+from multiprocessing import Process, Manager
 
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
+
+pid = os.getpid()
+ppid = os.getppid()
+
+errorlog_clean = open(str((os.path.split(os.path.realpath(__file__))[0]).replace('\\', '/')) + '/error.log', 'w').close()
 
 
 def prt(mes):
     print(str(datetime.now().strftime('[%Y.%m.%d %H:%M:%S] ')) + str(mes))
 
 
+def error(pid, ppid):
+    system = str(platform.system())
+    print(str(datetime.now().strftime('[%Y.%m.%d %H:%M:%S] ')) + '程序运行出现错误，终止运行，错误信息已保存至程序目录下的error.log文件中')
+    with open(str((os.path.split(os.path.realpath(__file__))[0]).replace('\\', '/')) + '/error.log', 'a', encoding='utf-8') as f:
+        f.write(str(datetime.now().strftime('[%Y.%m.%d %H:%M:%S] ')) + str(traceback.format_exc()) + '\n')
+    if system == 'Linux':
+        os.killpg(os.getpgid(int(pid)), signal.SIGTERM)
+    elif system == 'Windows':
+        os.system('taskkill /F /T /PID ' + str(pid))
+    else:
+        os.kill(int(ppid), signal.SIGTERM)
+
+
 try:
     import config
 except:
     prt("读取配置文件异常,请检查配置文件是否存在或语法是否有问题")
-    os._exit(0)
+    error(pid, ppid)
 
 try:
     with open(str((os.path.split(os.path.realpath(__file__))[0]).replace('\\', '/')) + '/face_config.json', 'r', encoding='utf-8') as f:
@@ -56,12 +78,12 @@ def msgFormat(msg, groupid='0'):
         img_cqcode = re.findall('\[CQ:image[^\]]*\]', msg)
         for cqcode in list(set(img_cqcode)):
             imgurl =  re.findall('.*,url=([^(\]|,|\s)]*).*', cqcode)[0]
-            msg = msg.replace(cqcode, '[图片] ' + imgurl + '\n') if str(config.TG) == "True" else msg.replace(cqcode, '[图片]')
+            msg = msg.replace(cqcode, '[图片] ' + imgurl + '\n') if str(value.get('TG')) == "True" else msg.replace(cqcode, '[图片]')
     if '[CQ:video' in msg:
         video_cqcode = re.findall('\[CQ:video[^\]]*\]', msg)
         for cqcode in list(set(video_cqcode)):
             videourl = re.findall('.*,url=([^(\]|,|\s)]*).*', cqcode)[0]
-            msg = msg.replace(cqcode, '[视频] ' + videourl + '\n') if str(config.TG) == "True" else msg.replace(cqcode, '[视频]')
+            msg = msg.replace(cqcode, '[视频] ' + videourl + '\n') if str(value.get('TG')) == "True" else msg.replace(cqcode, '[视频]')
     if '[CQ:at' in msg:
         at_cqcode = re.findall('\[CQ:at[^\]]*\]', msg)
         for cqcode in list(set(at_cqcode)):
@@ -91,11 +113,11 @@ def msgFormat(msg, groupid='0'):
             if 'com.tencent.miniapp' in data.get('app'):
                 mini_title = data.get('meta').get(view).get('title')
                 mini_url = data.get('meta').get(view).get('url').replace('\\', '/')
-                msg = '[小程序]' + mini_title + '\n' + mini_url if str(config.TG) == "True" else '[小程序]' + mini_title
+                msg = '[小程序]' + mini_title + '\n' + mini_url if str(value.get('TG')) == "True" else '[小程序]' + mini_title
             elif 'com.tencent.structmsg' in data.get('app'):
                 jumpurl = data.get('meta').get(view).get('jumpUrl').replace('\\', '/')
                 title = data.get('meta').get(view).get('title')
-                msg = '[分享]' + title + '\n' + jumpurl if str(config.TG) == 'True' else '[分享]' + title
+                msg = '[分享]' + title + '\n' + jumpurl if str(value.get('TG')) == 'True' else '[分享]' + title
             else:
                 msg = '[卡片消息]'
         except:
@@ -116,6 +138,29 @@ def msgFormat(msg, groupid='0'):
         msg = "[戳一戳]"
     msg = html.unescape(msg)
     return msg
+
+
+def config_update(value):
+    try:
+        while 1:
+            try:
+                importlib.reload(config)
+            except:
+                print(str(datetime.now().strftime('[%Y.%m.%d %H:%M:%S] ')) + '配置获取异常,请检查配置文件是否存在/权限是否正确/语法是否有误')
+                error(value.get('pid'), value.get('ppid'))
+                break
+            newcfg = {'MiPush': str(config.MiPush), 'FCM': str(config.FCM), 'TG': str(config.TG), 'KEY': str(config.KEY),
+                    'WhiteList': list(config.WhiteList), 'TG_UID': str(config.TG_UID), 'TG_GroupLink': str(config.TG_GroupLink),
+                    'MiPush_API': str(config.MiPush_API), 'FCM_API': str(config.FCM_API), 'TG_API': str(config.TG_API)}
+            for i in newcfg.keys():
+                if str(value.get(i)) != str(newcfg.get(i)):
+                    prt(str(i) + '更改,新' + str(i) + '值为' + str(newcfg.get(i)))
+            value.update(newcfg)
+            time.sleep(1)
+    except KeyboardInterrupt:
+        pass
+    except:
+        error(value.get('pid'), value.get('ppid'))
 
 
 def getGroupName(groupId):
@@ -173,7 +218,7 @@ def replymsg(msgid):
         replymsg_sender = replymsg_json.get("data").get("sender").get("nickname")
         replymsg_timestamp = replymsg_json.get("data").get("time")
         replymsg_styletime = styletime(replymsg_timestamp)
-        reply_msg = "[回复" + replymsg_sender + "(" + replymsg_styletime + "): " + replymsg + "]\n" if str(config.TG) == "True" else f"[回复{replymsg_sender}的消息]"
+        reply_msg = "[回复" + replymsg_sender + "(" + replymsg_styletime + "): " + replymsg + "]\n" if str(value.get('TG')) == "True" else f"[回复{replymsg_sender}的消息]"
     else:
         reply_msg = '[消息回复]'
     return reply_msg
@@ -203,18 +248,18 @@ async def recvMsg():
                 friendId = json_data.get("user_id")
                 nickname = getnickname(friendId)
                 prt("新的好友添加请求：%s" % friendId)
-                if str(config.MiPush) == "True":
-                    data_send(config.MiPush_API, title="新的好友添加请求", content='%s想要添加您为好友' % friendId, alias=config.KEY)
-                elif str(config.FCM) == "True":
-                    data_send(config.FCM_API, id=config.KEY, title="新的好友添加请求", message='%s想要添加您为好友' % friendId, type='FriendAdd')
-                elif str(config.TG) == "True":
+                if str(value.get('MiPush')) == "True":
+                    data_send(value.get('MiPush_API'), title="新的好友添加请求", content='%s想要添加您为好友' % friendId, alias=value.get('KEY'))
+                elif str(value.get('FCM')) == "True":
+                    data_send(value.get('FCM_API'), id=value.get('KEY'), title="新的好友添加请求", message='%s想要添加您为好友' % friendId, type='FriendAdd')
+                elif str(value.get('TG')) == "True":
                     msg = friendId + ' 请求添加您为好友'
-                    url = f"{str(config.TG_API)}/bot{str(config.KEY)}/sendMessage"
+                    url = f"{str(value.get('TG_API'))}/bot{str(value.get('KEY'))}/sendMessage"
                     data_send(str(url), chat_id=str(TG_ID), text=str(msg), disable_web_page_preview="true")
         elif json_data.get("post_type") == "notice":
             if json_data.get("notice_type") == "group_upload":
                 groupId = json_data.get("group_id")
-                if groupId in list(config.WhiteList):
+                if groupId in list(value.get('WhiteList')):
                     groupName = getGroupName(groupId)
                     filename = json_data.get("file").get("name")
                     userid = json_data.get("user_id")
@@ -226,35 +271,37 @@ async def recvMsg():
                         card = card.get("data").get("nickname") + " "
                     msg = card + '上传了 ' + filename
                     prt(str(groupName) + ': ' + str(msg))
-                    if str(config.MiPush) == "True":
-                        data_send(config.MiPush_API, title="QQ通知", content='%s' % (msg), alias=config.KEY)
-                    if str(config.FCM) == "True":
-                        data_send(config.FCM_API, id=config.KEY, title="QQ通知", message=str(msg), type='privateMsg')
-                    if str(config.TG) == "True":
-                        if str(groupId) in dict(config.TG_GroupLink):
-                            TG_ID = dict(config.TG_GroupLink).get(str(groupId))
-                        url = f"{str(config.TG_API)}/bot{str(config.KEY)}/sendMessage"
+                    if str(value.get('MiPush')) == "True":
+                        data_send(value.get('MiPush_API'), title="QQ通知", content='%s' % (msg), alias=value.get('KEY'))
+                    if str(value.get('FCM')) == "True":
+                        data_send(value.get('FCM_API'), id=value.get('KEY'), title="QQ通知", message=str(msg), type='privateMsg')
+                    if str(value.get('TG')) == "True":
+                        if str(groupId) in dict(value.get('TG_GroupLink')):
+                            TG_ID = dict(value.get('TG_GroupLink')).get(str(groupId))
+                        else:
+                            TG_ID = str(value.get('TG_UID'))
+                        url = f"{str(value.get('TG_API'))}/bot{str(value.get('KEY'))}/sendMessage"
                         data_send(str(url), chat_id=str(TG_ID), text=str(msg), disable_web_page_preview="true")
         elif json_data.get("message_type") == "private":
             msg = msgFormat(json_data.get("message"))
             uid = json_data.get("sender").get("user_id")
             nickname = getfriendmark(uid)
             prt("%s: %s" % (nickname, msg))
-            if str(config.MiPush) == "True":
-                data_send(config.MiPush_API, title=str(nickname), content=str(msg), alias=config.KEY)
-            elif str(config.FCM) == "True":
-                data_send(config.FCM_API, id=config.KEY, title=str(nickname), message=msg, type='privateMsg')
-            elif str(config.TG) == "True":
-                if str(uid) in dict(config.TG_GroupLink):
-                    TG_ID = dict(config.TG_GroupLink).get(str(uid))
+            if str(value.get('MiPush')) == "True":
+                data_send(value.get('MiPush_API'), title=str(nickname), content=str(msg), alias=value.get('KEY'))
+            elif str(value.get('FCM')) == "True":
+                data_send(value.get('FCM_API'), id=value.get('KEY'), title=str(nickname), message=str(msg), type='privateMsg')
+            elif str(value.get('TG')) == "True":
+                if str(uid) in dict(value.get('TG_GroupLink')):
+                    TG_ID = dict(value.get('TG_GroupLink')).get(str(uid))
                 else:
-                    TG_ID = str(config.TG_UID)
+                    TG_ID = str(value.get('TG_UID'))
                 msg = nickname + ":\n" + msg
-                url = f"{str(config.TG_API)}/bot{str(config.KEY)}/sendMessage"
+                url = f"{str(value.get('TG_API'))}/bot{str(value.get('KEY'))}/sendMessage"
                 data_send(str(url), chat_id=str(TG_ID), text=str(msg), disable_web_page_preview="true")
         elif json_data.get("message_type") == "group":
             groupId = json_data.get("group_id")
-            if groupId in list(config.WhiteList):
+            if groupId in list(value.get('WhiteList')):
                 uid = json_data.get("sender").get("user_id")
                 nickName = json_data.get("sender").get("nickname")
                 card = json_data.get("sender").get("card")
@@ -263,17 +310,17 @@ async def recvMsg():
                 nickName = str(card) if str(card) != "" else str(nickName)
                 if str(msg) != 'None':
                     prt("%s: %s: %s" % (groupName, nickName, msg))
-                    if str(config.MiPush) == "True":
-                        data_send(config.MiPush_API, title='%s' % groupName, content='%s:%s' % (nickName, msg), alias=config.KEY)
-                    if str(config.FCM) == "True":
-                        data_send(config.FCM_API, id='%s' % config.KEY, title=str(groupName), message='%s:%s' % (nickName, msg), type='groupMsg')
-                    if str(config.TG) == "True":
-                        if str(groupId) in dict(config.TG_GroupLink):
-                            TG_ID = dict(config.TG_GroupLink).get(str(groupId))
+                    if str(value.get('MiPush')) == "True":
+                        data_send(value.get('MiPush_API'), title='%s' % groupName, content='%s:%s' % (nickName, msg), alias=value.get('KEY'))
+                    if str(value.get('FCM')) == "True":
+                        data_send(value.get('FCM_API'), id='%s' % value.get('KEY'), title=str(groupName), message='%s:%s' % (nickName, msg), type='groupMsg')
+                    if str(value.get('TG')) == "True":
+                        if str(groupId) in dict(value.get('TG_GroupLink')):
+                            TG_ID = dict(value.get('TG_GroupLink')).get(str(groupId))
                         else:
-                            TG_ID = str(config.TG_UID)
+                            TG_ID = str(value.get('TG_UID'))
                         text = nickName + "[" + groupName + "]" + ":\n" + msg
-                        url = f"{str(config.TG_API)}/bot{str(config.KEY)}/sendMessage"
+                        url = f"{str(value.get('TG_API'))}/bot{str(value.get('KEY'))}/sendMessage"
                         data_send(str(url), chat_id=str(TG_ID), text=str(text), disable_web_page_preview="true")
     except:
         with open(str((os.path.split(os.path.realpath(__file__))[0]).replace('\\', '/')) + '/error.log', 'a', encoding='utf-8') as f:
@@ -284,6 +331,13 @@ async def recvMsg():
 
 if __name__ == '__main__':
     urllib3.disable_warnings()
-    errorlog_clean = open(str((os.path.split(os.path.realpath(__file__))[0]).replace('\\', '/')) + '/error.log', 'w').close()
     prt('程序开始运行')
+    value = Manager().dict()
+    value.update({'pid': str(pid), 'ppid': str(ppid), 'MiPush': str(config.MiPush),'FCM': str(config.FCM),
+                    'TG': str(config.TG),'KEY': str(config.KEY), 'WhiteList': list(config.WhiteList),
+                    'TG_UID': str(config.TG_UID), 'TG_GroupLink': str(config.TG_GroupLink),
+                    'MiPush_API': str(config.MiPush_API), 'FCM_API': str(config.FCM_API), 'TG_API': str(config.TG_API)})
+    conf_update = Process(target=config_update, args=(value, ))
+    conf_update.daemon = True
+    conf_update.start()
     app.run(host="127.0.0.1", port=5000)
