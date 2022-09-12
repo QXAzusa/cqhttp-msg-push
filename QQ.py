@@ -156,7 +156,7 @@ def config_update(value):
             newcfg = {'MiPush': str(config.MiPush), 'FCM': str(config.FCM), 'TG': str(config.TG), 'KEY': str(config.KEY),
                         'WhiteList': list(config.WhiteList), 'TG_UID': str(config.TG_UID), 'TG_GroupLink': str(config.TG_GroupLink),
                         'MiPush_API': str(config.MiPush_API), 'FCM_API': str(config.FCM_API), 'TG_API': str(config.TG_API)}
-            for i in newcfg.keys():
+            for i in list(newcfg.keys()):
                 if str(value.get(i)) != str(newcfg.get(i)):
                     prt(str(i) + '更改,新' + str(i) + '值为' + str(newcfg.get(i)))
             value.update(newcfg)
