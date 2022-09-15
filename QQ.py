@@ -280,8 +280,8 @@ async def recvMsg():
                     if str(value.get('FCM')) == "True":
                         data_send(value.get('FCM_API'), id=value.get('KEY'), title="QQ通知", message=str(msg), type='privateMsg')
                     if str(value.get('TG')) == "True":
-                        if str(groupId) in dict(value.get('TG_GroupLink')):
-                            TG_ID = dict(value.get('TG_GroupLink')).get(str(groupId))
+                        if str(groupId) in eval(value.get('TG_GroupLink')):
+                            TG_ID = eval(value.get('TG_GroupLink')).get(str(groupId))
                         else:
                             TG_ID = str(value.get('TG_UID'))
                         url = f"{str(value.get('TG_API'))}/bot{str(value.get('KEY'))}/sendMessage"
@@ -296,8 +296,8 @@ async def recvMsg():
             elif str(value.get('FCM')) == "True":
                 data_send(value.get('FCM_API'), id=value.get('KEY'), title=str(nickname), message=str(msg), type='privateMsg')
             elif str(value.get('TG')) == "True":
-                if str(uid) in dict(value.get('TG_GroupLink')):
-                    TG_ID = dict(value.get('TG_GroupLink')).get(str(uid))
+                if str(uid) in eval(value.get('TG_GroupLink')):
+                    TG_ID = eval(value.get('TG_GroupLink')).get(str(uid))
                 else:
                     TG_ID = str(value.get('TG_UID'))
                 msg = nickname + ":\n" + msg
@@ -319,8 +319,8 @@ async def recvMsg():
                     if str(value.get('FCM')) == "True":
                         data_send(value.get('FCM_API'), id='%s' % value.get('KEY'), title=str(groupName), message='%s:%s' % (nickName, msg), type='groupMsg')
                     if str(value.get('TG')) == "True":
-                        if str(groupId) in dict(value.get('TG_GroupLink')):
-                            TG_ID = dict(value.get('TG_GroupLink')).get(str(groupId))
+                        if str(groupId) in eval(value.get('TG_GroupLink')):
+                            TG_ID = eval(value.get('TG_GroupLink')).get(str(groupId))
                         else:
                             TG_ID = str(value.get('TG_UID'))
                         text = nickName + "[" + groupName + "]" + ":\n" + msg
