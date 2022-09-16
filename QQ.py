@@ -155,9 +155,10 @@ def config_update(value):
                 old_st_mtime_ns = stat.st_mtime_ns
                 try:
                     importlib.reload(config)
-                    newcfg = {'MiPush': str(config.MiPush), 'FCM': str(config.FCM), 'TG': str(config.TG), 'KEY': str(config.KEY),
-                                'WhiteList': list(config.WhiteList), 'TG_UID': str(config.TG_UID), 'TG_GroupLink': dict(config.TG_GroupLink),
-                                'MiPush_API': str(config.MiPush_API), 'FCM_API': str(config.FCM_API), 'TG_API': str(config.TG_API)}
+                    newcfg = {'MiPush': str(config.MiPush), 'FCM': str(config.FCM), 'TG': str(config.TG), 'MiPush_KEY': str(config.MiPush_KEY),
+                                'FCM_KEY': str(config.FCM_KEY), 'TG_KEY': str(config.TG_KEY), 'WhiteList': list(config.WhiteList),
+                                'TG_UID': str(config.TG_UID), 'TG_GroupLink': dict(config.TG_GroupLink), 'MiPush_API': str(config.MiPush_API),
+                                'FCM_API': str(config.FCM_API), 'TG_API': str(config.TG_API)}
                 except:
                     prt('读取配置文件异常,请检查配置文件的语法是否有误或所需变量是否存在，程序使用最后一次正确的的配置')
                     error_log(value.get('local_dir'))
@@ -349,7 +350,8 @@ if __name__ == '__main__':
         prt('程序开始运行')
         value = Manager().dict()
         value.update({'pid': str(pid), 'ppid': str(ppid),'local_dir': str(local_dir), 'MiPush': str(config.MiPush),
-                        'FCM': str(config.FCM), 'TG': str(config.TG),'KEY': str(config.KEY),
+                        'FCM': str(config.FCM), 'TG': str(config.TG), 'MiPush_KEY': str(config.MiPush_KEY),
+                        'FCM_KEY': str(config.FCM_KEY), 'TG_KEY': str(config.TG_KEY),
                         'WhiteList': list(config.WhiteList), 'TG_UID': str(config.TG_UID),
                         'TG_GroupLink': dict(config.TG_GroupLink), 'MiPush_API': str(config.MiPush_API),
                         'FCM_API': str(config.FCM_API), 'TG_API': str(config.TG_API)})
