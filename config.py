@@ -3,7 +3,7 @@
 # 配置更改后实时生效
 
 # 推送方式选择，可以多选
-# True为启用，False为禁用
+# True为启用，其他字符为禁用
 MiPush = "True"
 FCM = "False"
 TG = "False"
