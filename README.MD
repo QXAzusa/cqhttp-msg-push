@@ -49,7 +49,7 @@ servers:
 	<tr align="center">
 	    <td>Mipush</td>
 	    <td>MiPush推送选择</td>
-	    <td rowspan="3">True/False</td>
+	    <td rowspan="3">True/其他字符</td>
       <td rowspan="3">✔<br/><br/>（三项任意组合）</td>
 	</tr>
 	<tr align="center">
