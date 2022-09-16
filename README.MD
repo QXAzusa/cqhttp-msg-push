@@ -39,20 +39,72 @@ servers:
 前往<a href="https://t.me/BotFather">@BotFather</a>，发送/newbot，根据指引创建机器人，保存创建后提供的token，最后发送/start给机器人
 
 ### config.py参数填写
-|      名称     |                                           介绍                                       |    可填写的值   |        必填项        |
-|:-------------:|:-----------------------------------------------------------------------------------:|:--------------:|:--------------------:|
-|    Mipush     |                                     MiPush推送选择                                   |   True/False   |          ✔          |
-|      FCM      |                                      FCM推送选择                                     |   True/False   |          ✔          |
-|      TG       |                                     TG Bot推送选择                                   |   True/False   |          ✔          |
-|   MIPush_KEY  |                                 应用“消息接收”中设置的别名                            |                |  Mipush为True时必填   |
-|    FCM_KEY    |                                  应用“WirePusher”中的ID                              |                |   FCM为True时必填    |
-|     TG_KEY    |                                 创建机器人时所提供的token                             |                |    TG为True时必填    |
-|   WhiteList   |                                   需要推送群消息的群号                                |                |          ✔          |
-|    TG_UID     |                                  需要接收消息的TG用户ID                               |                |       TG推送必填     |
-| TG_GroupLink  |        Telegram群组消息绑定关系<br/>格式为：{"群号":"TG群组ID","群号":"TG群组ID"}       |                |          可选        |
-|   MiPush_API  |                                     MiPush推送接口                                   |                |  Mipush为True时必填  |
-|    FCM_API    |                                       FCM推送接口                                    |                |   FCM为True时必填    |
-|    TG_API     |                                       TG推送接口                                     |                |    TG为True时必填    |
+<table>
+	<tr align="center">
+	    <th>名称</th>
+	    <th>介绍</th>
+	    <th>可填写的值</th>
+      <th>必填项</th>
+	</tr>
+	<tr align="center">
+	    <td>Mipush</td>
+	    <td>MiPush推送选择</td>
+	    <td rowspan="3">True/False</td>
+      <td rowspan="3">✔<br/><br/>（三项任意组合）</td>
+	</tr>
+	<tr align="center">
+	    <td>FCM</td>
+	    <td>FCM推送选择</td>
+	</tr>
+	<tr align="center">
+	    <td>TG</td>
+	    <td>TG推送选择</td>
+	</tr>
+  <tr align="center">
+	    <td>WhiteList</td>
+	    <td>需要推送群消息的群号</td>
+	    <td>QQ群号</td>
+	    <td>✔</td>
+	</tr>
+	<tr align="center">
+      <td>MIPush_KEY</td>
+	    <td>应用“消息接收”中设置的别名</td>
+	    <td rowspan="7">字符串</td>
+	    <td rowspan="2">Mipush为True时必填</td>
+	</tr>
+  	<tr align="center">
+	    <td>MiPush_API</td>
+	    <td>MiPush推送接口</td>
+	</tr>
+	<tr align="center">
+      <td>FCM_KEY</td>
+	    <td>应用“WirePusher”中的ID</td>
+	    <td rowspan="2">FCM为True时必填</td>
+	</tr>
+  <tr align="center">
+	    <td>FCM_API</td>
+	    <td>FCM推送接口</td>
+	</tr>
+	<tr align="center">
+	    <td>TG_KEY</td>
+	    <td>创建机器人时所提供的token</td>
+	    <td rowspan="3">TG为True时必填</td>
+	</tr>
+  <tr align="center">
+	    <td>TG_API</td>
+	    <td>TG推送接口</td>
+	</tr>
+  <tr align="center">
+	    <td>TG_UID</td>
+	    <td>需要接收消息的TG用户ID</td>
+	</tr>
+	<tr align="center">
+	    <td>TG_GroupLink</td>
+	    <td>Telegram群组消息绑定关系<br/>格式为：{"群号":"TG群组ID","群号":"TG群组ID"}</td>
+	    <td>字典</td>
+	    <td>可选</td>
+	</tr>
+</table>
 
 ## JetBrains开源许可
 本项目重度依赖于JetBrains™ PyCharm，感谢JetBrains s.r.o为本项目提供[开源许可证](https://www.jetbrains.com/community/opensource/#support)，如果你同样对开发充满热情并且经常使用JetBrains s.r.o的产品，你也可以尝试通过JetBrains官方渠道[申请](https://www.jetbrains.com/shop/eform/opensource)开源许可证以供核心开发者使用
