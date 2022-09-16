@@ -43,14 +43,14 @@ servers:
 	<tr align="center">
 	    <th>名称</th>
 	    <th>介绍</th>
+	    <th>是否必填</th>
 	    <th>可填写的值</th>
-      <th>必填项</th>
 	</tr>
 	<tr align="center">
 	    <td>Mipush</td>
 	    <td>MiPush推送选择</td>
+	    <td rowspan="3">✔<br/><br/>（三项任意组合）</td>
 	    <td rowspan="3">True/其他字符</td>
-      <td rowspan="3">✔<br/><br/>（三项任意组合）</td>
 	</tr>
 	<tr align="center">
 	    <td>FCM</td>
@@ -60,28 +60,28 @@ servers:
 	    <td>TG</td>
 	    <td>TG推送选择</td>
 	</tr>
-  <tr align="center">
+  	<tr align="center">
 	    <td>WhiteList</td>
 	    <td>需要推送群消息的群号</td>
-	    <td>QQ群号</td>
 	    <td>✔</td>
+	    <td>QQ群号</td>
 	</tr>
 	<tr align="center">
-      <td>MIPush_KEY</td>
+      	    <td>MiPush_KEY</td>
 	    <td>应用“消息接收”中设置的别名</td>
-	    <td rowspan="7">字符串</td>
 	    <td rowspan="2">Mipush为True时必填</td>
+	    <td rowspan="7">字符串</td>
 	</tr>
   	<tr align="center">
 	    <td>MiPush_API</td>
 	    <td>MiPush推送接口</td>
 	</tr>
 	<tr align="center">
-      <td>FCM_KEY</td>
+      	    <td>FCM_KEY</td>
 	    <td>应用“WirePusher”中的ID</td>
 	    <td rowspan="2">FCM为True时必填</td>
 	</tr>
-  <tr align="center">
+  	<tr align="center">
 	    <td>FCM_API</td>
 	    <td>FCM推送接口</td>
 	</tr>
@@ -90,19 +90,19 @@ servers:
 	    <td>创建机器人时所提供的token</td>
 	    <td rowspan="3">TG为True时必填</td>
 	</tr>
-  <tr align="center">
+  	<tr align="center">
 	    <td>TG_API</td>
 	    <td>TG推送接口</td>
 	</tr>
-  <tr align="center">
+  	<tr align="center">
 	    <td>TG_UID</td>
 	    <td>需要接收消息的TG用户ID</td>
 	</tr>
 	<tr align="center">
 	    <td>TG_GroupLink</td>
 	    <td>Telegram群组消息绑定关系<br/>格式为：{"群号":"TG群组ID","群号":"TG群组ID"}</td>
-	    <td>字典</td>
 	    <td>可选</td>
+	    <td>字典</td>
 	</tr>
 </table>
 
