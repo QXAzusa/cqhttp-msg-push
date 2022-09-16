@@ -146,23 +146,32 @@ def error(pid, ppid, errorlog_dir):
 
 def config_update(value):
     try:
+        config_path = value.get('local_dir') + '/config.py'
+        stat = os.stat(config_path)
+        old_st_mtime_ns = stat.st_mtime_ns
         while 1:
-            try:
-                importlib.reload(config)
-            except:
-                prt('读取配置文件异常,请检查配置文件是否存在或语法是否有问题')
-                error(value.get('pid'), value.get('ppid'), value.get('local_dir'))
-                break
-            newcfg = {'MiPush': str(config.MiPush), 'FCM': str(config.FCM), 'TG': str(config.TG), 'KEY': str(config.KEY),
-                        'WhiteList': list(config.WhiteList), 'TG_UID': str(config.TG_UID), 'TG_GroupLink': str(config.TG_GroupLink),
-                        'MiPush_API': str(config.MiPush_API), 'FCM_API': str(config.FCM_API), 'TG_API': str(config.TG_API)}
-            for i in list(newcfg.keys()):
-                if str(value.get(i)) != str(newcfg.get(i)):
-                    prt(str(i) + '更改,新' + str(i) + '值为' + str(newcfg.get(i)))
-            value.update(newcfg)
+            stat = os.stat(config_path)
+            if stat.st_mtime_ns != old_st_mtime_ns:
+                old_st_mtime_ns = stat.st_mtime_ns
+                try:
+                    importlib.reload(config)
+                    newcfg = {'MiPush': str(config.MiPush), 'FCM': str(config.FCM), 'TG': str(config.TG), 'KEY': str(config.KEY),
+                                'WhiteList': list(config.WhiteList), 'TG_UID': str(config.TG_UID), 'TG_GroupLink': dict(config.TG_GroupLink),
+                                'MiPush_API': str(config.MiPush_API), 'FCM_API': str(config.FCM_API), 'TG_API': str(config.TG_API)}
+                except:
+                    prt('读取配置文件异常,请检查配置文件的语法是否有误或所需变量是否存在，程序使用最后一次正确的的配置')
+                    error_log(value.get('local_dir'))
+                    continue
+                for i in list(newcfg.keys()):
+                    if str(value.get(i)) != str(newcfg.get(i)):
+                        prt(str(i) + '更改,新' + str(i) + '值为' + str(newcfg.get(i)))
+                value.update(newcfg)
             time.sleep(1)
     except KeyboardInterrupt:
         prt('由于触发了KeyboardInterrupt(同时按下了Ctrl+C等情况)，程序强制停止运行')
+    except FileNotFoundError:
+        prt('配置文件丢失，程序强制停止运行')
+        error(value.get('pid'), value.get('ppid'), value.get('local_dir'))
     except:
         error(value.get('pid'), value.get('ppid'), value.get('local_dir'))
 
@@ -253,12 +262,13 @@ async def recvMsg():
                 nickname = getnickname(friendId)
                 prt("新的好友添加请求：%s" % friendId)
                 if str(value.get('MiPush')) == "True":
-                    data_send(value.get('MiPush_API'), title="新的好友添加请求", content='%s想要添加您为好友' % friendId, alias=value.get('KEY'))
+                    data_send(value.get('MiPush_API'), title="新的好友添加请求", content='%s想要添加您为好友' % friendId, alias=value.get('MiPush_KEY'))
                 elif str(value.get('FCM')) == "True":
-                    data_send(value.get('FCM_API'), id=value.get('KEY'), title="新的好友添加请求", message='%s想要添加您为好友' % friendId, type='FriendAdd')
+                    data_send(value.get('FCM_API'), id=value.get('FCM_KEY'), title="新的好友添加请求", message='%s想要添加您为好友' % friendId, type='FriendAdd')
                 elif str(value.get('TG')) == "True":
                     msg = friendId + ' 请求添加您为好友'
-                    url = f"{str(value.get('TG_API'))}/bot{str(value.get('KEY'))}/sendMessage"
+                    url = f"{str(value.get('TG_API'))}/bot{str(value.get('TG_KEY'))}/sendMessage"
+                    TG_ID = str(value.get('TG_UID'))
                     data_send(str(url), chat_id=str(TG_ID), text=str(msg), disable_web_page_preview="true")
         elif json_data.get("post_type") == "notice":
             if json_data.get("notice_type") == "group_upload":
@@ -276,15 +286,15 @@ async def recvMsg():
                     msg = card + '上传了 ' + filename
                     prt(str(groupName) + ': ' + str(msg))
                     if str(value.get('MiPush')) == "True":
-                        data_send(value.get('MiPush_API'), title="QQ通知", content='%s' % (msg), alias=value.get('KEY'))
+                        data_send(value.get('MiPush_API'), title="QQ通知", content='%s' % (msg), alias=value.get('MiPush_KEY'))
                     if str(value.get('FCM')) == "True":
-                        data_send(value.get('FCM_API'), id=value.get('KEY'), title="QQ通知", message=str(msg), type='privateMsg')
+                        data_send(value.get('FCM_API'), id=value.get('FCM_KEY'), title="QQ通知", message=str(msg), type='privateMsg')
                     if str(value.get('TG')) == "True":
-                        if str(groupId) in eval(value.get('TG_GroupLink')):
-                            TG_ID = eval(value.get('TG_GroupLink')).get(str(groupId))
+                        if str(groupId) in dict(value.get('TG_GroupLink')):
+                            TG_ID = dict(value.get('TG_GroupLink')).get(str(groupId))
                         else:
                             TG_ID = str(value.get('TG_UID'))
-                        url = f"{str(value.get('TG_API'))}/bot{str(value.get('KEY'))}/sendMessage"
+                        url = f"{str(value.get('TG_API'))}/bot{str(value.get('TG_KEY'))}/sendMessage"
                         data_send(str(url), chat_id=str(TG_ID), text=str(msg), disable_web_page_preview="true")
         elif json_data.get("message_type") == "private":
             msg = msgFormat(json_data.get("message"))
@@ -292,16 +302,16 @@ async def recvMsg():
             nickname = getfriendmark(uid)
             prt("%s: %s" % (nickname, msg))
             if str(value.get('MiPush')) == "True":
-                data_send(value.get('MiPush_API'), title=str(nickname), content=str(msg), alias=value.get('KEY'))
+                data_send(value.get('MiPush_API'), title=str(nickname), content=str(msg), alias=value.get('MiPush_KEY'))
             elif str(value.get('FCM')) == "True":
-                data_send(value.get('FCM_API'), id=value.get('KEY'), title=str(nickname), message=str(msg), type='privateMsg')
+                data_send(value.get('FCM_API'), id=value.get('FCM_KEY'), title=str(nickname), message=str(msg), type='privateMsg')
             elif str(value.get('TG')) == "True":
-                if str(uid) in eval(value.get('TG_GroupLink')):
-                    TG_ID = eval(value.get('TG_GroupLink')).get(str(uid))
+                if str(uid) in dict(value.get('TG_GroupLink')):
+                    TG_ID = dict(value.get('TG_GroupLink')).get(str(uid))
                 else:
                     TG_ID = str(value.get('TG_UID'))
                 msg = nickname + ":\n" + msg
-                url = f"{str(value.get('TG_API'))}/bot{str(value.get('KEY'))}/sendMessage"
+                url = f"{str(value.get('TG_API'))}/bot{str(value.get('TG_KEY'))}/sendMessage"
                 data_send(str(url), chat_id=str(TG_ID), text=str(msg), disable_web_page_preview="true")
         elif json_data.get("message_type") == "group":
             groupId = json_data.get("group_id")
@@ -315,16 +325,16 @@ async def recvMsg():
                 if str(msg) != 'None':
                     prt("%s: %s: %s" % (groupName, nickName, msg))
                     if str(value.get('MiPush')) == "True":
-                        data_send(value.get('MiPush_API'), title='%s' % groupName, content='%s:%s' % (nickName, msg), alias=value.get('KEY'))
+                        data_send(value.get('MiPush_API'), title='%s' % groupName, content='%s:%s' % (nickName, msg), alias=value.get('MiPush_KEY'))
                     if str(value.get('FCM')) == "True":
-                        data_send(value.get('FCM_API'), id='%s' % value.get('KEY'), title=str(groupName), message='%s:%s' % (nickName, msg), type='groupMsg')
+                        data_send(value.get('FCM_API'), id='%s' % value.get('FCM_KEY'), title=str(groupName), message='%s:%s' % (nickName, msg), type='groupMsg')
                     if str(value.get('TG')) == "True":
-                        if str(groupId) in eval(value.get('TG_GroupLink')):
-                            TG_ID = eval(value.get('TG_GroupLink')).get(str(groupId))
+                        if str(groupId) in dict(value.get('TG_GroupLink')):
+                            TG_ID = dict(value.get('TG_GroupLink')).get(str(groupId))
                         else:
                             TG_ID = str(value.get('TG_UID'))
                         text = nickName + "[" + groupName + "]" + ":\n" + msg
-                        url = f"{str(value.get('TG_API'))}/bot{str(value.get('KEY'))}/sendMessage"
+                        url = f"{str(value.get('TG_API'))}/bot{str(value.get('TG_KEY'))}/sendMessage"
                         data_send(str(url), chat_id=str(TG_ID), text=str(text), disable_web_page_preview="true")
     except:
         error_log(local_dir)
@@ -341,7 +351,7 @@ if __name__ == '__main__':
         value.update({'pid': str(pid), 'ppid': str(ppid),'local_dir': str(local_dir), 'MiPush': str(config.MiPush),
                         'FCM': str(config.FCM), 'TG': str(config.TG),'KEY': str(config.KEY),
                         'WhiteList': list(config.WhiteList), 'TG_UID': str(config.TG_UID),
-                        'TG_GroupLink': str(config.TG_GroupLink), 'MiPush_API': str(config.MiPush_API),
+                        'TG_GroupLink': dict(config.TG_GroupLink), 'MiPush_API': str(config.MiPush_API),
                         'FCM_API': str(config.FCM_API), 'TG_API': str(config.TG_API)})
         conf_update = Process(target=config_update, args=(value, ))
         conf_update.daemon = True
