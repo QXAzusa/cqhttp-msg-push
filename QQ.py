@@ -50,9 +50,9 @@ except:
     os._exit(0)
 
 try:
-    groupInfo = json.loads(requests.get("http://localhost:5700/get_group_list").text)
-    friendInfo = json.loads(requests.get("http://localhost:5700/get_friend_list").text)
-    userId = json.loads(requests.get("http://localhost:5700/get_login_info").text).get("data").get("user_id")
+    user_nickname = json.loads(requests.get("http://localhost:5700/get_login_info").text).get("data").get("nickname")
+    prt('欢迎回来，' + str(user_nickname))
+    del user_nickname
 except:
     prt("无法从go-cqhttp获取信息,程序终止运行,请检查go-cqhttp是否运行或端口配置是否正确")
     error_log(local_dir)
@@ -178,16 +178,18 @@ def config_update(value):
 
 
 def getGroupName(groupId):
-    length = len(groupInfo.get("data"))
-    for i in range(length):
-        if groupId == groupInfo["data"][i]["group_id"]:
-            return groupInfo["data"][i]["group_name"]
+    groupInfo = json.loads(requests.get("http://localhost:5700/get_group_list").text)
+    group = list(groupInfo.get("data"))
+    for i in group:
+        if str(groupId) == str(dict(i).get('group_id')):
+            return str(dict(i).get('group_name'))
+    return "未知"
 
 
 def getnickname(id):
     url = 'http://localhost:5700/get_stranger_info?user_id=' + str(id)
     userInfo = json.loads(requests.get(url).text)
-    return userInfo.get("data").get("nickname")
+    return str(userInfo.get("data").get("nickname"))
 
 
 def styletime(now):
@@ -197,15 +199,13 @@ def styletime(now):
 
 
 def getfriendmark(UID):
-    name = 'None'
-    length = len(friendInfo.get("data"))
-    for i in range(length):
-        if UID == friendInfo["data"][i]["user_id"]:
-            name = friendInfo["data"][i]["remark"] if friendInfo["data"][i]["remark"] != '' else friendInfo["data"][i]["nickname"]
-            break
-    if name == 'None':
-        name = getnickname(UID) or "未知"
-    return name
+    friendInfo = json.loads(requests.get("http://localhost:5700/get_friend_list").text)
+    friend_list = list(friendInfo.get('data'))
+    for i in friend_list:
+        if UID == dict(i).get("user_id"):
+            name = dict(i).get("remark") if dict(i).get("remark") != '' else dict(i).get("nickname")
+            return str(name)
+    return getnickname(UID)
 
 
 def data_send(url, **kwargs):
