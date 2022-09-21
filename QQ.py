@@ -33,32 +33,6 @@ def error_log(local):
     prt('程序运行出现错误,错误信息已保存至程序目录下的error.log文件中')
 
 
-try:
-    import config
-except:
-    prt("读取配置文件异常,程序终止运行,请检查配置文件是否存在或语法是否有问题")
-    error_log(local_dir)
-    os._exit(0)
-
-try:
-    with open(local_dir + '/face_config.json', 'r', encoding='utf-8') as f:
-        face_data = json.load(f)
-    len_face = len(face_data.get("sysface"))
-except:
-    prt("读取表情包配置文件异常,程序终止运行,请检查配置文件是否存在或语法是否有问题")
-    error_log(local_dir)
-    os._exit(0)
-
-try:
-    user_nickname = json.loads(requests.get("http://localhost:5700/get_login_info").text).get("data").get("nickname")
-    prt('欢迎回来，' + str(user_nickname))
-    del user_nickname
-except:
-    prt("无法从go-cqhttp获取信息,程序终止运行,请检查go-cqhttp是否运行或端口配置是否正确")
-    error_log(local_dir)
-    os._exit(0)
-
-
 def msgFormat(msg, groupid='0'):
     if '[CQ:reply' in msg:
         reply_cqcode = re.findall('\[CQ:reply[^\]]*\]', msg)
@@ -250,10 +224,10 @@ def getEmojiName(face_id):
 
 
 def data_handling(value, json_data):
-    urllib3.disable_warnings()
-    groupId = '0'
-    TG_ID = '0'
     try:
+        urllib3.disable_warnings()
+        groupId = '0'
+        TG_ID = '0'
         if json_data.get("post_type") == "request":
             if json_data.get("request_type") == "friend":
                 friendId = json_data.get("user_id")
@@ -334,21 +308,50 @@ def data_handling(value, json_data):
                         text = nickName + "[" + groupName + "]" + ":\n" + msg
                         url = f"{str(value.get('TG_API'))}/bot{str(value.get('TG_KEY'))}/sendMessage"
                         data_send(str(url), chat_id=str(TG_ID), text=str(text), disable_web_page_preview="true")
+    except KeyboardInterrupt:
+        prt('由于触发了KeyboardInterrupt(同时按下了Ctrl+C等情况)，程序强制停止运行')
     except:
-        error_log(local_dir)
+        error_log(value.get('local_dir'))
 
 
 @app.route("/", methods=['GET', 'POST'])
 def recvMsg():
-    data = request.get_data()
-    json_data = json.loads(data.decode("utf-8"))
-    dat_handling = Process(target=data_handling, args=(value, json_data, ))
-    dat_handling.daemon = True
-    dat_handling.start()
-    return "200 OK"
+    try:
+        data = request.get_data()
+        json_data = json.loads(data.decode("utf-8"))
+        dat_handling = Process(target=data_handling, args=(value, json_data, ))
+        dat_handling.daemon = True
+        dat_handling.start()
+        return "200 OK"
+    except KeyboardInterrupt:
+        prt('由于触发了KeyboardInterrupt(同时按下了Ctrl+C等情况)，程序强制停止运行')
+    except:
+        error_log(local_dir)
 
 
 if __name__ == '__main__':
+    try:
+        import config
+    except:
+        prt("读取配置文件异常,程序终止运行,请检查配置文件是否存在或语法是否有问题")
+        error_log(local_dir)
+        os._exit(0)
+    try:
+        with open(local_dir + '/face_config.json', 'r', encoding='utf-8') as f:
+            face_data = json.load(f)
+        len_face = len(face_data.get("sysface"))
+    except:
+        prt("读取表情包配置文件异常,程序终止运行,请检查配置文件是否存在或语法是否有问题")
+        error_log(local_dir)
+        os._exit(0)
+    try:
+        user_nickname = json.loads(requests.get("http://localhost:5700/get_login_info").text).get("data").get("nickname")
+        prt('欢迎回来，' + str(user_nickname))
+        del user_nickname
+    except:
+        prt("无法从go-cqhttp获取信息,程序终止运行,请检查go-cqhttp是否运行或端口配置是否正确")
+        error_log(local_dir)
+        os._exit(0)
     try:
         log = logging.getLogger('werkzeug')
         log.setLevel(logging.ERROR)
