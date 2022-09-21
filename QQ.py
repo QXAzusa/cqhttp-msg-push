@@ -249,13 +249,10 @@ def getEmojiName(face_id):
     return face_name
 
 
-@app.route("/", methods=['GET', 'POST'])
-async def recvMsg():
-    global TG_ID, groupId
-    groupId = ''
-    TG_ID = ''
-    data = request.get_data()
-    json_data = json.loads(data.decode("utf-8"))
+def data_handling(value, json_data):
+    urllib3.disable_warnings()
+    groupId = '0'
+    TG_ID = '0'
     try:
         if json_data.get("post_type") == "request":
             if json_data.get("request_type") == "friend":
@@ -339,6 +336,15 @@ async def recvMsg():
                         data_send(str(url), chat_id=str(TG_ID), text=str(text), disable_web_page_preview="true")
     except:
         error_log(local_dir)
+
+
+@app.route("/", methods=['GET', 'POST'])
+def recvMsg():
+    data = request.get_data()
+    json_data = json.loads(data.decode("utf-8"))
+    dat_handling = Process(target=data_handling, args=(value, json_data, ))
+    dat_handling.daemon = True
+    dat_handling.start()
     return "200 OK"
 
 
