@@ -235,9 +235,9 @@ def data_handling(value, json_data):
                 prt("新的好友添加请求：%s" % friendId)
                 if str(value.get('MiPush')) == "True":
                     data_send(value.get('MiPush_API'), title="新的好友添加请求", content='%s想要添加您为好友' % friendId, alias=value.get('MiPush_KEY'))
-                elif str(value.get('FCM')) == "True":
+                if str(value.get('FCM')) == "True":
                     data_send(value.get('FCM_API'), id=value.get('FCM_KEY'), title="新的好友添加请求", message='%s想要添加您为好友' % friendId, type='FriendAdd')
-                elif str(value.get('TG')) == "True":
+                if str(value.get('TG')) == "True":
                     msg = friendId + ' 请求添加您为好友'
                     url = f"{str(value.get('TG_API'))}/bot{str(value.get('TG_KEY'))}/sendMessage"
                     TG_ID = str(value.get('TG_UID'))
@@ -275,9 +275,9 @@ def data_handling(value, json_data):
             prt("%s: %s" % (nickname, msg))
             if str(value.get('MiPush')) == "True":
                 data_send(value.get('MiPush_API'), title=str(nickname), content=str(msg), alias=value.get('MiPush_KEY'))
-            elif str(value.get('FCM')) == "True":
+            if str(value.get('FCM')) == "True":
                 data_send(value.get('FCM_API'), id=value.get('FCM_KEY'), title=str(nickname), message=str(msg), type='privateMsg')
-            elif str(value.get('TG')) == "True":
+            if str(value.get('TG')) == "True":
                 if str(uid) in dict(value.get('TG_GroupLink')):
                     TG_ID = dict(value.get('TG_GroupLink')).get(str(uid))
                 else:
