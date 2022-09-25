@@ -104,7 +104,7 @@ def msgFormat(msg, groupid='0'):
             view = list(data.get('meta').keys())[0]
             if 'com.tencent.miniapp' in data.get('app'):
                 mini_title = data.get('meta').get(view).get('title')
-                mini_url = data.get('meta').get(view).get('url').replace('\\', '/')
+                mini_url = data.get('meta').get(view).get('qqdocurl').replace('\\', '/')
                 msg = '[小程序]' + mini_title + '\n' + mini_url if str(value.get('TG')) == "True" else '[小程序]' + mini_title
             elif 'com.tencent.structmsg' in data.get('app'):
                 jumpurl = data.get('meta').get(view).get('jumpUrl').replace('\\', '/')
